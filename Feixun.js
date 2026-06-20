@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @name 飞讯终端 (Feixun 3.3 - 无缝队列后台系统版)
  * @description 后台异步队列、红点未读系统、安全批量物理注入、群聊骰子并发升级
  * @version 3.3.0
@@ -157,334 +157,334 @@ let currentChatChar = null;
 		        characters: {
             "秧秧": {
                 name: "秧秧",
-                avatar: "https://pic1.imgdb.cn/item/69b1837c1685501a52df79d7.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yangyang.webp",
                 signature: "睨睆苍翩，啾啾其鸣。",
                 plotWeight: 1000
             },
             "炽霞": {
                 name: "炽霞",
-                avatar: "https://pic1.imgdb.cn/item/69b1837c1685501a52df79d8.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/chixia.webp",
                 signature: "想要成为英雄！",
                 plotWeight: 1000
             },
             "菲比": {
                 name: "菲比",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b326.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/feibi.webp",
                 signature: "愿岁主为迷途之人照亮前路。",
                 plotWeight: 2001
             },
             "卡提希娅": {
                 name: "卡提希娅",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b327.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/katixiya.webp",
                 signature: "修行中",
                 plotWeight: 2203
             },
             "露帕": {
                 name: "露帕",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b328.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/lupa.webp",
                 signature: "请继续支持露帕，谢谢大家！",
                 plotWeight: 2403
             },
             "弗洛洛": {
                 name: "弗洛洛",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b329.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/fuluoluo.webp",
                 signature: "……或许是时候去寻找新的道路了。",
                 plotWeight: 2503
             },
             "布兰特": {
                 name: "布兰特",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b32a.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/bulante.webp",
                 signature: "噢噢噢噢噢噢！",
                 plotWeight: 2001
             },
             "爱弥斯": {
                 name: "爱弥斯",
-                avatar: "https://pic1.imgdb.cn/item/69af0d0112eee7498b77b32b.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/aimisi.webp",
                 signature: "拉海洛的夜景今晚很漂亮呢。晚安！",
                 plotWeight: 3004
             },
             "琳奈": {
                 name: "琳奈",
-                avatar: "https://s41.ax1x.com/2026/03/10/peivCnS.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/linnai.webp",
                 signature: "请支持科考摩托百日训练ε=ε=ε=ε=┌( *｀ω´)┘",
                 plotWeight: 3001
             },
             "仇远": {
                 name: "仇远",
-                avatar: "https://s41.ax1x.com/2026/03/10/peijz1P.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qiuyuan.webp",
                 signature: "签名 语音输入",
                 plotWeight: 2703
             },
             "千咲": {
                 name: "千咲",
-                avatar: "https://s41.ax1x.com/2026/03/10/peijjfI.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qianxiao.webp",
                 signature: "普通学生（复课版)",
                 plotWeight: 2801
             },
             "嘉贝莉娜": {
                 name: "嘉贝莉娜",
-                avatar: "https://s41.ax1x.com/2026/03/10/peijxpt.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jiabeilina.webp",
                 signature: "全职猎魔，在线接单",
                 plotWeight: 2703
             },
             "卜灵": {
                 name: "卜灵",
-                avatar: "https://s41.ax1x.com/2026/03/10/peivS6f.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/buling.webp",
                 signature: "喜欢查成分的小鬼们你们好啊",
                 plotWeight: 2401
             },
             "灯灯": {
                 name: "灯灯",
-                avatar: "https://pic1.imgdb.cn/item/69af5be2afde4f1fb1c979ed.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/dengdeng.webp",
                 signature: "期待每一单咧~",
                 plotWeight: 1401
             },
             "相里要": {
                 name: "相里要",
-                avatar: "https://pic1.imgdb.cn/item/69af5be2afde4f1fb1c979ef.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xiangliyao.webp",
                 signature: "华胥研究院的研究员相里要。您好。",
                 plotWeight: 1201
             },
             "折枝": {
                 name: "折枝",
-                avatar: "https://pic1.imgdb.cn/item/69af5be2afde4f1fb1c979f0.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/zhezhi.webp",
                 signature: "如果没有及时回复就是在画画……很抱歉！",
                 plotWeight: 1201
             },
             "漂泊者（男）": {
                 name: "漂泊者（男）",
-                avatar: "https://pic1.imgdb.cn/item/69af5be2afde4f1fb1c979f1.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/rovermale.webp",
                 signature: "我想留在大家身边……从过去，一同迈向明天。",
                 plotWeight: 1000
             },
             "珂莱塔": {
                 name: "珂莱塔",
-                avatar: "https://pic1.imgdb.cn/item/69af5be2afde4f1fb1c979f2.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kelaita.webp",
                 signature: "谈生意，还是交朋友……以莫塔里的名义，合作愉快。",
                 plotWeight: 2002
             },
             "今汐": {
                 name: "今汐",
-                avatar: "https://pic1.imgdb.cn/item/69af5bc8afde4f1fb1c9791b.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jinxi.webp",
                 signature: "今州边庭事物繁忙，回复不及时实属无奈，如有紧急要事请联络近卫散华。",
                 plotWeight: 1103
             },
             "漂泊者（女）": {
                 name: "漂泊者（女）",
-                avatar: "https://pic1.imgdb.cn/item/69af5bc8afde4f1fb1c9791c.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/roverfemale.webp",
                 signature: "我想留在大家身边……从过去，一同迈向明天。",
                 plotWeight: 1000
             },
             "赞妮": {
                 name: "赞妮",
-                avatar: "https://pic1.imgdb.cn/item/69af5bc8afde4f1fb1c9791d.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/zanni.webp",
                 signature: "有事情留言，急事通讯。",
                 plotWeight: 2001
             },
             "白芷": {
                 name: "白芷",
-                avatar: "https://pic1.imgdb.cn/item/69af5bc8afde4f1fb1c9791e.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/baizhi.webp",
                 signature: "主攻回音声态，相关问题可以找我，其它问题烦请提前告知。",
                 plotWeight: 1001
             },
             "长离": {
                 name: "长离",
-                avatar: "https://pic1.imgdb.cn/item/69af5bc8afde4f1fb1c97920.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/changli.webp",
                 signature: "\"为天地立心，为生民立命，为往圣继绝学，为万世开太平。\"",
                 plotWeight: 1103
             },
             "秋水": {
                 name: "秋水",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb9afde4f1fb1c9cf00.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qiushui.webp",
                 signature: "有各种情报应有尽有，明码标价，童叟无欺，欢迎咨询！",
                 plotWeight: 1003
             },
             "丹瑾": {
                 name: "丹瑾",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb9afde4f1fb1c9cf01.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/danjin.webp",
                 signature: "希望世界上的罪恶通通消失。",
                 plotWeight: 1003
             },
             "安可": {
                 name: "安可",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb9afde4f1fb1c9cf02.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/anke.webp",
                 signature: "安可想和大家多交朋友~",
                 plotWeight: 1003
             },
             "忌炎": {
                 name: "忌炎",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb9afde4f1fb1c9cf03.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jiyan.webp",
                 signature: "岂日无衣，与子同袍。",
                 plotWeight: 1003
             },
             "洛可可": {
                 name: "洛可可",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb5afde4f1fb1c9cefb.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luokeke.webp",
                 signature: "\"世界是个舞台，你我都是演员。\"",
                 plotWeight: 2001
             },
             "吟霖": {
                 name: "吟霖",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb5afde4f1fb1c9cefc.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yinlin.webp",
                 signature: "步步为营",
                 plotWeight: 1003
             },
             "卡卡罗": {
                 name: "卡卡罗",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb5afde4f1fb1c9cefd.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kakaluo.webp",
                 signature: "你的委托，我一人足够。",
                 plotWeight: 1003
             },
             "凌阳": {
                 name: "凌阳",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb5afde4f1fb1c9cefe.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/lingyang.webp",
                 signature: "诸邪避散，岁岁平安！",
                 plotWeight: 1003
             },
             "渊武": {
                 name: "渊武",
-                avatar: "https://pic1.imgdb.cn/item/69af7fb5afde4f1fb1c9ceff.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yuanwu.webp",
                 signature: "欢迎来到渊武武馆。",
                 plotWeight: 1003
             },
             "夏空": {
                 name: "夏空",
-                avatar: "https://pic1.imgdb.cn/item/69af81fdafde4f1fb1c9cf5c.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xiakong.webp",
                 signature: "愿我的歌伴你而行，跨过时间的海洋，在永恒中回响~",
                 plotWeight: 2201
             },
             "尤诺": {
                 name: "尤诺",
-                avatar: "https://pic1.imgdb.cn/item/69af81fdafde4f1fb1c9cf5b.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/younuo.webp",
                 signature: "没印象的话就重新认识吧，尤诺....这次要记好咯。",
                 plotWeight: 2602
             },
             "奥古斯塔": {
                 name: "奥古斯塔",
-                avatar: "https://pic1.imgdb.cn/item/69af81fdafde4f1fb1c9cf5a.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/aogusita.webp",
                 signature: "事务繁忙，留言漏回请催我，急事总督官面谈。",
                 plotWeight: 2601
             },
             "陆·赫斯": {
                 name: "陆·赫斯",
-                avatar: "https://pic1.imgdb.cn/item/69af81fdafde4f1fb1c9cf58.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luhesi.webp",
                 signature: "不捣蛋就给糖！:'-).",
                 plotWeight: 3001
             },
             "莫宁": {
                 name: "莫宁",
-                avatar: "https://pic1.imgdb.cn/item/69af81fdafde4f1fb1c9cf59.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/moning.webp",
                 signature: "消息都会回复的，未回请稍等。",
                 plotWeight: 3001
             },
             "鉴心": {
                 name: "鉴心",
-                avatar: "https://pic1.imgdb.cn/item/69af829c12eee7498b7802e9.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jianxin.webp",
                 signature: "内外合修，净尽无余，自得玄妙，造道之极。",
                 plotWeight: 1001
             },
             "守岸人": {
                 name: "守岸人",
-                avatar: "https://pic1.imgdb.cn/item/69af829c12eee7498b7802eb.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/shouanren.webp",
                 signature: "黑海岸接口人，嗯……代行中",
                 plotWeight: 1303
             },
             "椿": {
                 name: "椿",
-                avatar: "https://pic1.imgdb.cn/item/69af829c12eee7498b7802ec.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/chun.webp",
                 signature: "……一同起舞吧❤~",
                 plotWeight: 1303
             },
             "釉瑚": {
                 name: "釉瑚",
-                avatar: "https://pic1.imgdb.cn/item/69af829c12eee7498b7802ed.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/youhu.webp",
                 signature: "鉴宝大师釉瑚是也！",
                 plotWeight: 1301
             },
             "坎特蕾拉": {
                 name: "坎特蕾拉",
-                avatar: "https://pic1.imgdb.cn/item/69af829c12eee7498b7802ea.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kanteleila.webp",
                 signature: "特效药批发",
                 plotWeight: 2203
             },
             "桃祈": {
                 name: "桃祈",
-                avatar: "https://pic1.imgdb.cn/item/69af82db12eee7498b780364.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/taoqi.webp",
                 signature: "……想睡觉喵。",
                 plotWeight: 1003
             },
             "散华": {
                 name: "散华",
-                avatar: "https://pic1.imgdb.cn/item/69af8de3afde4f1fb1c9f4b0.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/sanhua.webp",
                 signature: "边庭相关事宜，或有事叨扰令尹，可以由我代为转达。",
                 plotWeight: 1001
             },
             "西格莉卡": {
                 name: "西格莉卡",
-                avatar: "https://pic1.imgdb.cn/item/69b988ccdf27f3bc5809378a.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xigelika.webp",
                 signature: "嘤嘤鹦真的不是雪衫帝小时候！",
                 plotWeight: 3201
             },
             "洛瑟菈": {
                 name: "洛瑟菈",
-                avatar: "https://pic1.imgdb.cn/item/6a25966fd71dee7c941b3833.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luosela.webp",
                 signature: "风格在言语之前表达。",
                 plotWeight: 3101
             },
             "绯雪": {
                 name: "绯雪",
-                avatar: "https://pic1.imgdb.cn/item/69f3941099509bb69a4049d1.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/feixue.webp",
                 signature: "请输入文本",
                 plotWeight: 3301
             },
             "达妮娅": {
                 name: "达妮娅",
-                avatar: "https://pic1.imgdb.cn/item/69f3941099509bb69a4049d0.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/daniya.webp",
                 signature: "好困……没事请不要找我。",
                 plotWeight: 3303
             },
             "露西": {
                 name: "露西",
-                avatar: "https://pic1.imgdb.cn/item/6a281f30edae85a62850e274.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luxi.webp",
                 signature: "做了一个好梦。",
                 plotWeight: 3401
             },
             "丽贝卡": {
                 name: "丽贝卡",
-                avatar: "https://pic1.imgdb.cn/item/6a281f30edae85a62850e275.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/libeika.webp",
                 signature: "沉迷涂鸦创作，不接受任何审美指点。觉得难看？给我憋着！",
                 plotWeight: 3401
             },
             "IRIS": {
                 name: "IRIS",
-                avatar: "https://pic1.imgdb.cn/item/6a1476b972662027ad962b72.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/iris.png",
                 signature: "有问题？不妨试着问问我吧！",
                 plotWeight: 3001
             },
             "莫特斐": {
                 name: "莫特斐",
-                avatar: "https://pic1.imgdb.cn/item/69af82db12eee7498b780363.png",
+                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/motefei.webp",
                 signature: "有需求欢迎找我，前提是得合理。",
                 plotWeight: 1001
             }
         },
 
         emojis: {
-            "阿布-疑问": "https://pic1.imgdb.cn/item/69af864612eee7498b78228a.png",
-            "阿布-哼，不理你了": "https://pic1.imgdb.cn/item/69af864212eee7498b782250.png",
-            "阿布-石化了": "https://pic1.imgdb.cn/item/69af864212eee7498b782251.png",
-            "阿布-双手合十": "https://pic1.imgdb.cn/item/69af864212eee7498b782252.png",
-            "阿布-送你一朵小花花": "https://pic1.imgdb.cn/item/69af864212eee7498b782254.png",
-            "阿布-太棒了，好喜欢": "https://pic1.imgdb.cn/item/69af864212eee7498b782255.png",
-            "阿布-伸懒腰": "https://pic1.imgdb.cn/item/69af863d12eee7498b78221b.png",
-            "阿布-就这？嘲讽的笑容": "https://pic1.imgdb.cn/item/69af863d12eee7498b78221c.png",
-            "阿布-火冒三丈": "https://pic1.imgdb.cn/item/69af863d12eee7498b78221d.png",
-            "阿布-摸摸头": "https://pic1.imgdb.cn/item/69af863d12eee7498b78221f.png",
-            "阿布-干杯": "https://pic1.imgdb.cn/item/69af863912eee7498b7821f3.png",
-            "阿布-好难过，emo了": "https://pic1.imgdb.cn/item/69af863912eee7498b7821f5.png",
-            "阿布-点赞": "https://pic1.imgdb.cn/item/69af863912eee7498b7821f6.png",
-			"阿布-流口水": "https://pic1.imgdb.cn/item/69af863d12eee7498b78221e.png",
-            "阿布-打招呼": "https://pic1.imgdb.cn/item/69af863312eee7498b7821ca.png"
+            "阿布-疑问": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/yiwen.png",
+            "阿布-哼，不理你了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/heng-bulinile.png",
+            "阿布-石化了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shihuale.png",
+            "阿布-双手合十": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shuangshouheshi.png",
+            "阿布-送你一朵小花花": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/songniyiduoxiaohuahua.png",
+            "阿布-太棒了，好喜欢": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/taibangle-haoxihuan.png",
+            "阿布-伸懒腰": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shenlanyao.png",
+            "阿布-就这？嘲讽的笑容": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/jiuzhe-chaofengdexiaorong.png",
+            "阿布-火冒三丈": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/huomaosanzhang.png",
+            "阿布-摸摸头": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/momotou.png",
+            "阿布-干杯": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/ganbei.png",
+            "阿布-好难过，emo了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/haonanguo-emole.png",
+            "阿布-点赞": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/dianzan.png",
+			"阿布-流口水": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/liukoushui.png",
+            "阿布-打招呼": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/dazhaohu.png"
         }
         // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     };
