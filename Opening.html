@@ -1,0 +1,1115 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    /* =========================================
+       全局字体与背景
+       ========================================= */
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; overflow-x: hidden; }
+    
+    .wuwa-panel {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(23, 37, 84, 0.9) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 16px;
+        padding: 24px;
+        color: #e2e8f0;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.7), inset 0 0 20px rgba(56, 189, 248, 0.05);
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        backdrop-filter: blur(12px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Logo */
+    .wuwa-logo-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 10;
+    }
+    .wuwa-logo {
+        max-width: 240px;
+        height: auto;
+        filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.5));
+        will-change: transform, opacity;
+    }
+
+    /* 使用教程按钮 - 磨砂玻璃风格 */
+    .tutorial-btn {
+        display: block;
+        margin: 0 auto 25px;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        color: #7dd3fc;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-size: 0.9em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        letter-spacing: 0.3px;
+        opacity: 0; /* 初始隐藏，动画触发后显示 */
+    }
+    .tutorial-btn:hover {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: #38bdf8;
+        color: #ffffff;
+        box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+        transform: translateY(-1px);
+    }
+
+    /* 动画定义 */
+    @keyframes logoIntro {
+        0% { transform: scale(1.4) translateY(150px); opacity: 0; }
+        40% { opacity: 1; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heartbeat {
+        0% { transform: scale(1); box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); }
+        50% { transform: scale(1.03); box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+        100% { transform: scale(1); box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); }
+    }
+
+    /* 布局 */
+    .wuwa-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+        opacity: 0;
+    }
+    @media (min-width: 768px) {
+        .wuwa-grid {
+            grid-template-columns: 1fr 1fr;
+            align-items: start;
+        }
+    }
+
+    /* 控件样式 */
+    .wuwa-label {
+        display: block;
+        font-size: 0.9em;
+        color: #7dd3fc;
+        margin-bottom: 8px;
+        font-weight: 600;
+        margin-top: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .wuwa-input, .wuwa-select, .wuwa-textarea {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.5);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: #f0f9ff;
+        padding: 12px;
+        border-radius: 8px;
+        outline: none;
+        font-size: 0.95em;
+        box-sizing: border-box;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .wuwa-textarea {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.5;
+    }
+    .wuwa-input:focus, .wuwa-select:focus, .wuwa-textarea:focus {
+        border-color: #38bdf8;
+        background: rgba(15, 23, 42, 0.8);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+    }
+    .toggle-row:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(56, 189, 248, 0.3);
+    }
+    .toggle-row input[type="checkbox"] {
+        width: 20px; height: 20px; accent-color: #0ea5e9; cursor: pointer;
+    }
+    .toggle-text {
+        color: #e0f2fe; font-weight: 600; font-size: 1.05em;
+    }
+
+    .anim-box {
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+        max-height: 0;
+        opacity: 0;
+    }
+    .anim-box.open {
+        max-height: 1000px;
+        opacity: 1;
+    }
+
+    .warning-text {
+        font-size: 0.85em;
+        color: #fdba74;
+        margin-top: 8px;
+        padding: 10px;
+        background: rgba(67, 20, 7, 0.4);
+        border-radius: 6px;
+        border-left: 3px solid #f97316;
+        display: none;
+        line-height: 1.5;
+        animation: fadeInUp 0.3s ease;
+    }
+
+    /* --- 底部按钮组样式 --- */
+    .action-row {
+        display: flex;
+        gap: 15px;
+        margin-top: 35px;
+        width: 100%;
+        opacity: 0;
+    }
+
+    .wuwa-btn-base {
+        flex: 1;
+        padding: 16px;
+        border-radius: 10px;
+        font-size: 1.1em;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .example-btn {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        color: #94a3b8;
+    }
+    .example-btn:hover {
+        border-color: #38bdf8;
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .start-btn {
+        background: linear-gradient(90deg, #0284c7, #0891b2);
+        border: none;
+        color: white;
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        position: relative;
+        overflow: hidden;
+        animation: heartbeat 3s infinite ease-in-out;
+    }
+    .start-btn::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: 0.5s;
+    }
+    .start-btn:hover::after {
+        left: 100%;
+    }
+
+    .status-bar-bottom {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.85em;
+        color: #64748b;
+        opacity: 0;
+    }
+    .status-badge { padding: 4px 10px; border-radius: 6px; font-weight: 500; letter-spacing: 0.5px; }
+    .status-ok { color: #68d391; background: rgba(72, 187, 120, 0.15); border: 1px solid rgba(72, 187, 120, 0.2); }
+    .status-err { color: #fc8181; background: rgba(245, 101, 101, 0.15); border: 1px solid rgba(245, 101, 101, 0.2); }
+
+    #gender-selection-area {
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        padding-top: 12px;
+    }
+    .fading-out {
+        opacity: 0;
+        transform: translateY(-5px);
+        pointer-events: none;
+    }
+    
+    .gender-grid {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .gender-grid.rover-mode { grid-template-columns: 1fr 1fr; }
+    .gender-grid.normal-mode { grid-template-columns: 1fr 1fr 1fr; }
+
+    .gender-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 2px solid rgba(71, 85, 105, 0.4);
+        border-radius: 12px;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        text-align: center;
+    }
+    .gender-card:hover { 
+        border-color: #38bdf8; 
+        transform: translateY(-2px);
+    }
+    .gender-card.selected {
+        border-color: #38bdf8;
+        background: rgba(14, 165, 233, 0.15);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+    }
+
+    .img-wrap {
+        height: 160px;
+        width: 100%;
+        background: radial-gradient(circle at center, rgba(56,189,248,0.15) 0%, transparent 70%);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .img-wrap img {
+        height: 100%;
+        width: 100%;
+        object-fit: contain;
+        object-position: bottom center;
+        transition: transform 0.3s ease;
+    }
+    .gender-card:hover .img-wrap img { transform: scale(1.05); }
+    .card-label {
+        padding: 8px;
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #f1f5f9;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .normal-btn {
+        padding: 15px;
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 50px;
+    }
+    .normal-btn.selected { color: #38bdf8; }
+
+    .npc-panel {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 18px;
+        border-radius: 12px;
+        margin-top: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    @media (max-width: 767px) {
+        .img-wrap {
+            height: 110px;
+        }
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body>
+
+<div class="wuwa-panel">
+    <div class="wuwa-logo-container">
+        <img src="https://s41.ax1x.com/2026/02/25/pZxkG80.png" alt="WuWa Logo" class="wuwa-logo">
+    </div>
+    
+    <!-- 使用教程按钮 (磨砂玻璃) -->
+    <button id="ww-tutorial-btn" class="tutorial-btn">📘 使用教程</button>
+
+    <div class="wuwa-grid">
+        <div class="col-left">
+            <label class="toggle-row">
+                <input type="checkbox" id="ww-play-rover" checked>
+                <span class="toggle-text">扮演漂泊者</span>
+            </label>
+
+            <div id="gender-selection-area"></div>
+
+            <label class="wuwa-label">自定义身份/设定</label>
+            <textarea id="ww-custom-identity" class="wuwa-textarea" placeholder="在此输入额外的身份背景、能力设定或外貌描述..."></textarea>
+            
+            <div id="ai-refine-container" style="display:none; margin-top: 10px;">
+                <button id="ww-ai-refine-btn" type="button" class="wuwa-btn-base" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; padding: 10px; font-size: 0.9em; width: auto; display: inline-block;">✨ 让 AI 根据设定自动完善此变量</button>
+            </div>
+            
+            <div id="ooc-warning" class="warning-text">
+                ⚠️提示：您取消了“扮演漂泊者”。 1️⃣ 为了减少剧情串戏概率，请务必在上方输入框中补充您的简要设定，同时确认自己已通过世界书或者“用户设定管理”（顶部笑脸）**手动**注入了自己的完整设定！  2️⃣ 世界书文本高度绑定漂泊者，强烈建议勾选存在NPC漂泊者。如果你要跑剧情，还需要在互动角色一栏填入“漂泊者”！！
+            </div>
+
+            <div class="npc-panel">
+                <label class="toggle-row" style="background:transparent; padding:0; border:none; margin:0;">
+                    <input type="checkbox" id="ww-npc-exists">
+                    <span class="toggle-text">存在 NPC 漂泊者</span>
+                </label>
+                
+                <div id="npc-anim-box" class="anim-box">
+                    <div style="margin-top: 15px;">
+                        <label class="wuwa-label">NPC 性别</label>
+                        <div class="gender-grid rover-mode">
+                            <div class="gender-card" onclick="selectNpcGender('女')" id="npc-card-female">
+                                <div class="img-wrap"><img src="https://s41.ax1x.com/2026/02/25/pZxkJ2V.png"></div>
+                                <div class="card-label">女漂泊者</div>
+                            </div>
+                            <div class="gender-card" onclick="selectNpcGender('男')" id="npc-card-male">
+                                <div class="img-wrap"><img src="https://s41.ax1x.com/2026/02/25/pZxkYvT.png"></div>
+                                <div class="card-label">男漂泊者</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-right">
+            <div class="npc-panel" style="margin-top:0;">
+                <label class="toggle-row" style="background:transparent; padding:0; border:none; margin:0;">
+                    <input type="checkbox" id="ww-is-story-mode">
+                    <span class="toggle-text">剧情演绎模式</span>
+                </label>
+                <div style="font-size:0.8em; color:#94a3b8; margin-top:4px; margin-left:32px;">
+                    *不勾选则自动选择当前最新剧情版本的后日谈模式。注意：  1️⃣ 尽量选择某个大版本最结尾的部分为后日谈（比如v3.1，请选择“日光落处 (下)”作为后日谈版本，否则会提前触发梗概词条。如果执意要选中间版本后日谈，请在世界书控制手动关掉梗概词条）   2️⃣ 不勾选达妮娅生死不明（悲）只能手动准备救她。实在想直接和达妮娅互动可以玩“v3.3 Part 4春风祝颂你的旅途”后日谈
+                </div>
+
+                <div id="story-anim-box" class="anim-box">
+                    <div style="margin-top: 10px;">
+                        <label class="wuwa-label">剧情版本</label>
+                        <select id="ww-story-version" class="wuwa-select">
+                            <option value="">正在读取全局剧情数据...</option>
+                        </select>
+                        
+                        <label class="wuwa-label">剧情阶段</label>
+                        <select id="ww-story-stage" class="wuwa-select">
+                            <option value="发生前">发生前</option>
+                            <option value="进行中">进行中</option>
+                            <option value="后日谈">后日谈</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auto-fill-section" style="border: 1px solid rgba(56,189,248,0.2); border-radius: 12px; padding: 16px; margin-top: 20px; background: rgba(15,23,42,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <span style="font-size: 0.9em; color: #7dd3fc; font-weight: 600;">场景信息</span>
+                    <button id="ww-auto-fill-btn" type="button" style="background: none; border: 1px solid #fbbf24; color: #fbbf24; padding: 4px 12px; font-size: 0.8em; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; transition: all 0.2s; line-height: 1.4;">⚡ 自动填写</button>
+                </div>
+
+                <label class="wuwa-label">所处区域</label>
+                <select id="ww-location-main" class="wuwa-select">
+                    <option value="瑝珑-今州">瑝珑-今州</option>
+                    <option value="瑝珑-乘霄山">瑝珑-乘霄山</option>
+                    <option value="黑海岸-黑海岸地表">黑海岸-黑海岸地表</option>
+                    <option value="黑海岸-泰缇斯之底">黑海岸-泰缇斯之底</option>
+                    <option value="索诺拉-漂泊的终点">索诺拉-漂泊的终点</option>
+                    <option value="黎那汐塔-拉古那">黎那汐塔-拉古那</option>
+                    <option value="黎那汐塔-黎乔利群岛">黎那汐塔-黎乔利群岛</option>
+                    <option value="索诺拉-阿维纽林">索诺拉-阿维纽林</option>
+                    <option value="黎那汐塔-七丘">黎那汐塔-七丘</option>
+                    <option value="索诺拉-失亡彼岸">索诺拉-失亡彼岸</option>
+                    <option value="索诺拉-穗波市">索诺拉-穗波市</option>
+                    <option value="拉海洛">拉海洛</option>
+                    <option value="罗伊冰原">罗伊冰原</option>
+                    <option value="拉海洛-黯原">拉海洛-黯原</option>
+                    <option value="索诺拉-心之集域-夜之城">索诺拉-心之集域-夜之城</option>
+                    <option value="索诺拉-无尽宴会">索诺拉-无尽宴会</option>
+                    <option value="索诺拉-无尽宴会-共鸣私域">索诺拉-无尽宴会-共鸣私域（打手枪专用，详情看世界书）</option>
+                    <option value="其他">其他</option>
+                </select>
+
+                <label class="wuwa-label">详细地点</label>
+                <input type="text" id="ww-location-detail" class="wuwa-input" placeholder="如：星炬学院，留空则让AI自由发挥">
+
+                <label class="wuwa-label" style="color:#fbbf24;">开局见到的角色 (必填)</label>
+                <input type="text" id="ww-target-char" class="wuwa-input" placeholder="如：秧秧、炽霞 (多人请用顿号隔开)">
+
+                <label class="wuwa-label">补充剧情</label>
+                <textarea id="ww-plot-extra" class="wuwa-textarea" placeholder="如：从床上醒来，留空则让AI自由发挥"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-row">
+        <button type="button" id="ww-default-btn" class="wuwa-btn-base example-btn">
+            <span style="font-size:1.2em; margin-right:6px;">✎</span> 填写示例
+        </button>
+        <button id="ww-start-btn" class="wuwa-btn-base start-btn">
+            开启我的索拉里斯之旅
+        </button>
+    </div>
+
+    <div class="status-bar-bottom">
+        系统状态: <span id="sys-status" class="status-badge">检测中...</span>
+    </div>
+</div>
+
+<script>
+$(async function() {
+    toastr.options = { "positionClass": "toast-bottom-right", "timeOut": "4000" };
+
+    // ==========================================
+    // 0. 穿透引擎与API获取
+    // ==========================================
+    const ST_WIN = window.parent || window || top;
+    function getSTFn(fnName) {
+        if (typeof ST_WIN[fnName] === 'function') return ST_WIN[fnName];
+        if (typeof globalThis !== 'undefined' && typeof globalThis[fnName] === 'function') return globalThis[fnName];
+        return null;
+    }
+
+    const api_getCharWorldbookNames = getSTFn('getCharWorldbookNames');
+    const api_getWorldbook = getSTFn('getWorldbook');
+    const api_updateWorldbookWith = getSTFn('updateWorldbookWith');
+    const api_getLastMessageId = getSTFn('getLastMessageId');
+
+    function tryApplyStoryLogic(stat_data) {
+        let fn = getSTFn('calculateStoryLogic');
+        if (typeof fn === 'function') {
+            try { return fn(stat_data); } catch (e) { console.warn("Story Logic Sync Failed:", e); }
+        }
+        return stat_data;
+    }
+
+    // ==========================================
+    // 1. 状态管理
+    // ==========================================
+    let cachedStoryMap = null;
+    let targetBookName = null;
+    let initEntryUid = null;
+    let openingEntryUid = null;
+    let cachedOpeningContent = "";
+
+    let state = {
+        isRover: true,
+        myGender: '男', 
+        npcGender: '女'
+    };
+
+    // ==========================================
+    // 2. UI 渲染逻辑
+    // ==========================================
+    function renderGenderSelector() {
+        const $container = $('#gender-selection-area');
+        let html = '';
+
+        if (state.isRover) {
+            html = `
+            <div class="gender-grid rover-mode">
+                <div class="gender-card ${state.myGender === '男' ? 'selected' : ''}" onclick="window.selectMyGender('男')" id="my-card-male">
+                    <div class="img-wrap"><img src="https://s41.ax1x.com/2026/02/25/pZxkYvT.png"></div>
+                    <div class="card-label">男漂泊者</div>
+                </div>
+                <div class="gender-card ${state.myGender === '女' ? 'selected' : ''}" onclick="window.selectMyGender('女')" id="my-card-female">
+                    <div class="img-wrap"><img src="https://s41.ax1x.com/2026/02/25/pZxkJ2V.png"></div>
+                    <div class="card-label">女漂泊者</div>
+                </div>
+            </div>`;
+        } else {
+            html = `
+            <div class="gender-grid normal-mode">
+                <div class="gender-card normal-btn ${state.myGender === '男' ? 'selected' : ''}" onclick="window.selectMyGender('男')" id="my-btn-male">
+                    ♂️ 男
+                </div>
+                <div class="gender-card normal-btn ${state.myGender === '女' ? 'selected' : ''}" onclick="window.selectMyGender('女')" id="my-btn-female">
+                    ♀️ 女
+                </div>
+                <div class="gender-card normal-btn ${state.myGender === '未知' ? 'selected' : ''}" onclick="window.selectMyGender('未知')" id="my-btn-unknown">
+                    ⚧️ 未知
+                </div>
+            </div>`;
+        }
+        $container.html(html);
+    }
+
+    function updateNpcGenderUI() {
+        $('#npc-card-male').toggleClass('selected', state.npcGender === '男');
+        $('#npc-card-female').toggleClass('selected', state.npcGender === '女');
+    }
+
+    window.selectMyGender = (gender) => {
+        state.myGender = gender;
+        if (state.isRover) {
+            $('#my-card-male').toggleClass('selected', gender === '男');
+            $('#my-card-female').toggleClass('selected', gender === '女');
+        } else {
+            $('#my-btn-male').toggleClass('selected', gender === '男');
+            $('#my-btn-female').toggleClass('selected', gender === '女');
+            $('#my-btn-unknown').toggleClass('selected', gender === '未知');
+        }
+    };
+    
+    window.selectNpcGender = (gender) => {
+        state.npcGender = gender;
+        updateNpcGenderUI();
+    };
+
+    // ==========================================
+    // 3. 使用教程按钮点击事件（浏览器原生弹窗）
+    // ==========================================
+$('#ww-tutorial-btn').on('click', function() {
+    alert(
+        "📘 使用教程\n\n" +
+        "【快速上手】\n" +
+        "1. 选择身份 → 勾选是否扮演漂泊者、选性别、填自定义设定。\n" +
+        "2. 设定剧情 → 剧情模式可指定版本/阶段；不勾选则自动用最新后日谈。\n" +
+        "3. 填场景信息 → 区域、地点、开局遇到的角色（必填）、补充剧情。\n" +
+        "4. 按“开启我的索拉里斯之旅”生成开场。\n\n" +
+        "【按钮说明】\n" +
+        "🔹 填写示例 → 一键填充默认演示数据（漂泊者1.0开局）。\n" +
+        "🔹 ⚡ 自动填写 → AI根据身份与剧情自动推荐场景信息。\n" +
+        "🔹 ✨ 完善身份变量 → 非漂泊者时AI帮你生成身份描述。\n\n" +
+        "【注意】\n" +
+        "• 开局角色必填，否则无法启动。\n" +
+        "• 不扮演漂泊者需自行注入世界书设定。\n" +
+        "• 自动填写依赖AI，结果仅供参考修改。"
+    );
+});
+
+
+    // ==========================================
+    // 4. 基础事件绑定
+    // ==========================================
+    $('#ww-play-rover').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        const $area = $('#gender-selection-area');
+        $area.addClass('fading-out');
+        setTimeout(() => {
+            state.isRover = isChecked;
+            if (state.isRover && state.myGender === '未知') state.myGender = '男';
+            renderGenderSelector();
+            $area.removeClass('fading-out');
+            if (!state.isRover) {
+                $('#ooc-warning').slideDown();
+                $('#ai-refine-container').slideDown();
+            } else {
+                $('#ooc-warning').slideUp();
+                $('#ai-refine-container').slideUp();
+            }
+        }, 250);
+    });
+
+    $('#ww-npc-exists').on('change', function() {
+        $(this).is(':checked') ? $('#npc-anim-box').addClass('open') : $('#npc-anim-box').removeClass('open');
+    });
+
+    $('#ww-is-story-mode').on('change', function() {
+        $(this).is(':checked') ? $('#story-anim-box').addClass('open') : $('#story-anim-box').removeClass('open');
+    });
+
+    // ------------------------------------------------
+    // “填写示例”按钮修改：先弹确认框，确认后执行填写
+    // ------------------------------------------------
+    $('#ww-default-btn').on('click', function() {
+        if (!confirm("即将用默认示例数据覆盖当前所有填写内容（扮演漂泊者，1.0开局遇到秧秧和炽霞）。\n确认继续？")) {
+            return;
+        }
+        // 用户确认后才执行原有逻辑
+        state.isRover = true;
+        state.myGender = "男";
+        state.npcGender = "女";
+        $('#ww-play-rover').prop('checked', true).trigger('change');
+        $('#ww-npc-exists').prop('checked', false).trigger('change');
+        $('#ww-is-story-mode').prop('checked', true).trigger('change');
+        $('#ww-story-version').val("0,0"); 
+        $('#ww-story-stage').val("发生前");
+        $('#ww-custom-identity').val("");
+        $('#ww-location-main').val("瑝珑-今州");
+        $('#ww-location-detail').val("云陵谷");
+        $('#ww-target-char').val("秧秧，炽霞");
+        $('#ww-plot-extra').val("我睁开双眼，发现我正枕在一名黑发少女的大腿上，旁边是一名活泼好动的红发少女。");
+        setTimeout(() => {
+            state.myGender = "男";
+            renderGenderSelector();
+            state.npcGender = "女";
+            updateNpcGenderUI();
+            toastr.success("已填入示例数据");
+        }, 300);
+    });
+
+    // -----------------------------------------------------
+    // 5. AI 调用辅助函数
+    // -----------------------------------------------------
+    async function callAI(prompt) {
+        const ctx = (typeof ST_WIN.SillyTavern !== 'undefined' && ST_WIN.SillyTavern.getContext) ? ST_WIN.SillyTavern.getContext() : null;
+        if (!ctx || typeof ctx.generateQuietPrompt !== 'function') {
+            toastr.error('无法调用 AI 生成接口，请检查酒馆环境。');
+            return '';
+        }
+        let aiResponse = '';
+        let retry = 0;
+        const maxRetry = 2;
+        while (retry < maxRetry) {
+            try {
+                while (ctx.isGenerating) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                aiResponse = await ctx.generateQuietPrompt(prompt, false, false, '', '', { skip_wian: true });
+                if (aiResponse && !aiResponse.includes('[请求失败') && !aiResponse.includes('[Request Failed')) break;
+                retry++;
+                if (retry < maxRetry) await new Promise(r => setTimeout(r, 2000));
+            } catch (e) {
+                retry++;
+                if (retry < maxRetry) await new Promise(r => setTimeout(r, 2000));
+                else throw e;
+            }
+        }
+        return aiResponse;
+    }
+
+    // -----------------------------------------------------
+    // 6. 自动填写按钮（场景信息）
+    // -----------------------------------------------------
+    $('#ww-auto-fill-btn').on('click', async function() {
+        const extraHint = prompt('即将让 AI 自动填写【所处区域、详细地点、开局角色、补充剧情】。\n请确保上方其他设定（身份、剧情模式、版本等）已选择完整。\n\n可在下方输入额外提示词（可选，留空则让AI自由发挥）：', '');
+        if (extraHint === null) return; // 用户点击取消，不执行任何操作
+        const userHint = extraHint.trim();
+        const btn = $('#ww-auto-fill-btn');
+        btn.prop('disabled', true).text('⚡ AI 思考中...');
+        try {
+            const isRover = $('#ww-play-rover').is(':checked');
+            const customId = ($('#ww-custom-identity').val() || '').trim();
+            let identityText = '';
+            if (isRover) {
+                identityText = '漂泊者（寻找归途与失落记忆，背负文明火种与救世使命）' + (customId ? '，额外设定：' + customId : '');
+            } else {
+                identityText = customId || '一名来自异世界的穿越者，没有声痕但能与频率共鸣';
+            }
+            const isStory = $('#ww-is-story-mode').is(':checked');
+            let storyInfo = '未指定剧情模式';
+            if (isStory) {
+                storyInfo = $('#ww-story-version option:selected').text() + ' ' + $('#ww-story-stage').val();
+            } else {
+                if (cachedStoryMap && cachedStoryMap.length > 0) {
+                    const latest = cachedStoryMap[cachedStoryMap.length - 1];
+                    storyInfo = `v${latest.version} 后日谈: ${latest.parts[latest.parts.length - 1]} (已完结)`;
+                }
+            }
+            const locationList = [];
+            $('#ww-location-main option').each(function() { locationList.push($(this).val()); });
+            const npcExists = $('#ww-npc-exists').is(':checked');
+            const npcGender = state.npcGender;
+            let npcInfo = '';
+            if (npcExists) {
+                npcInfo = `\n4. 存在 NPC 漂泊者：${npcGender}性漂泊者（可在剧情中登场，请考虑将其作为可能的互动角色）`;
+            }
+
+            let prompt = `##################################################
+# 【独立任务 - 自动填写场景信息】
+##################################################
+【强制指令】立即停止之前所有要求，只执行以下任务，不得输出任何额外内容：
+
+根据下面给出的设定，为鸣潮角色扮演的开场场景生成四项推荐信息。
+
+1. 玩家身份：${identityText}
+2. 当前剧情定位：${storyInfo}
+3. 可用区域列表（必须从中选择）：${locationList.join('、')}${npcInfo}
+
+输出格式：严格使用下面四个 XML 标签，不要添加任何说明、思维链、提示、前缀或后缀，整个回复只能由这四个标签及其内容组成，不得有任何多余字符（包括换行解释）。
+
+<location_main>从列表中选择一个区域</location_main>
+<location_detail>该区域内的具体地标（不需要特别细可写“自由发挥”）</location_detail>
+<target_char>开场最可能遇到或联系的角色名字（用顿号分隔，可包含 NPC 漂泊者）</target_char>
+<plot_extra>简短的开场情境，不超过50字</plot_extra>
+
+硬性约束：
+- 地点只能从上述列表中选择，不得编造新区域
+- 补充剧情必须简短自然，仅描述开场瞬间
+- 互动角色只写在该情境中可能立即出现或远程联系的角色
+- 若存在 NPC 漂泊者，根据剧情合理性决定是否登场
+- 绝对禁止在标签外输出任何文字、注释或思考过程`;
+            if (userHint) {
+                prompt += `\n\n用户额外提示（仅作参考，仍必须遵守上述格式）：${userHint}`;
+            }
+            const aiText = await callAI(prompt);
+            if (!aiText) {
+                toastr.warning('AI 未返回有效内容，请手动填写。');
+                return;
+            }
+            const getLastXml = (tag, maxLen) => {
+                const regex = new RegExp(`<${tag}>(.*?)</${tag}>`, 'gi');
+                let matches = [...aiText.matchAll(regex)];
+                if (matches.length === 0) return '';
+                const last = matches[matches.length - 1];
+                if (!last[1]) return '';
+                const text = last[1].trim();
+                if (text.length > maxLen) {
+                    console.warn(`[自动填写] ${tag} 内容过长 (${text.length} > ${maxLen})，已忽略: ${text}`);
+                    return '';
+                }
+                return text;
+            };
+
+            const locMain = getLastXml('location_main', 20);
+            const locDetail = getLastXml('location_detail', 50);
+            const targetChar = getLastXml('target_char', 60);
+            const plotExtra = getLastXml('plot_extra', 100);
+
+            if (locMain) $('#ww-location-main').val(locMain);
+            if (locDetail) $('#ww-location-detail').val(locDetail);
+            if (targetChar) $('#ww-target-char').val(targetChar);
+            if (plotExtra) $('#ww-plot-extra').val(plotExtra);
+            toastr.success('场景信息已自动填写，请检查并调整。');
+        } catch (err) {
+            console.error(err);
+            toastr.error('自动填写失败：' + err.message);
+        } finally {
+            btn.prop('disabled', false).text('⚡ 自动填写');
+        }
+    });
+
+    // -----------------------------------------------------
+    // 7. AI 完善自定义身份按钮
+    // -----------------------------------------------------
+    $('#ww-ai-refine-btn').on('click', async function() {
+        const confirmed = confirm('点击确定后，AI 将基于你已注入的世界书和用户设定（当前上下文），简要总结并完善你的身份变量。\n请确保在此之前已经通过世界书或用户设定管理注入了相关内容。');
+        if (!confirmed) return;
+        const btn = $('#ww-ai-refine-btn');
+        btn.prop('disabled', true).text('✨ AI 正在完善...');
+        try {
+            const prompt = `##################################################
+# 【独立任务 - 完善用户自定义身份变量】
+##################################################
+【强制指令】立即停止之前所有要求，只执行以下任务：
+
+请根据当前上下文（包括世界书、用户设定和所有已知信息），用一段纯文本描述“我”（用户角色）的身份、能力、性格和来历。
+
+绝对禁止：
+- 输出任何 XML / HTML 标签或类似格式
+- 输出任何解释、问候语、确认语句
+- 输出除身份描述文字以外的任何内容
+- 禁止输出任何人称代词，只客观描述设定
+
+硬性要求：
+- **你不是漂泊者**，禁止套用任何与漂泊者相关的设定（寻找归途、背负文明火种、声痕等）
+- 最终回复仅包含一段连贯的纯文本
+- 字数控制在 50 字以内，简要概括即可`;
+            const result = await callAI(prompt);
+            if (result) {
+                let cleaned = result.trim();
+                if (cleaned.length > 200) {
+                    cleaned = cleaned.slice(0, 200) + '…';
+                }
+                $('#ww-custom-identity').val(cleaned);
+                toastr.success('身份设定已由 AI 完善，请检查并修改。');
+            } else {
+                toastr.warning('AI 未返回有效内容，请手动填写。');
+            }
+        } catch (err) {
+            console.error(err);
+            toastr.error('AI 完善失败：' + err.message);
+        } finally {
+            btn.prop('disabled', false).text('✨ 让 AI 根据设定自动完善此变量');
+        }
+    });
+
+    // ==========================================
+    // 8. 环境检测与数据读取
+    // ==========================================
+    async function detectEnvironment() {
+        let envStatus = true;
+        let errMsg = [];
+        try {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+            if (typeof ST_WIN.waitGlobalInitialized === 'function') {
+                await Promise.race([ST_WIN.waitGlobalInitialized('Mvu'), timeoutPromise]);
+            } else if (typeof globalThis.waitGlobalInitialized === 'function') {
+                await Promise.race([globalThis.waitGlobalInitialized('Mvu'), timeoutPromise]);
+            }
+        } catch(e) { console.warn("Mvu Wait Timeout:", e); }
+        const sources = [ ST_WIN, typeof globalThis !== 'undefined' ? globalThis : null ];
+        for (const src of sources) {
+            if (src && src.WuWaShared && src.WuWaShared.STORY_MAP) {
+                cachedStoryMap = src.WuWaShared.STORY_MAP;
+                break;
+            }
+        }
+        if (!cachedStoryMap) { envStatus = false; errMsg.push("未读取到全局 STORY_MAP"); }
+        if (!api_getCharWorldbookNames || !api_getWorldbook || !api_updateWorldbookWith) {
+            envStatus = false; errMsg.push("无法获取世界书 API");
+        } else {
+            try {
+                const charBooks = api_getCharWorldbookNames('current');
+                if (charBooks && charBooks.primary) {
+                    targetBookName = charBooks.primary;
+                    const entries = await api_getWorldbook(targetBookName);
+                    const initEntry = entries.find(e => (e.key && e.key.includes('[initvar]')) || (e.name && e.name.includes('[initvar]')));
+                    if (initEntry) { initEntryUid = initEntry.uid; } else { envStatus = false; errMsg.push("未找到 [initvar] 条目"); }
+                    const openEntry = entries.find(e => (e.key && e.key.includes('[opening]')) || (e.name && e.name.includes('[opening]')));
+                    if (openEntry) { openingEntryUid = openEntry.uid; cachedOpeningContent = openEntry.content || ""; } else { toastr.warning("未找到 [opening] 条目"); }
+                } else { envStatus = false; errMsg.push("未绑定主世界书"); }
+            } catch (e) { envStatus = false; errMsg.push("世界书读取错误: " + e.message); }
+        }
+        const $status = $('#sys-status');
+        if (envStatus) { $status.text("环境就绪").removeClass('status-err').addClass('status-ok'); }
+        else { $status.text("异常: " + errMsg.join(" | ")).removeClass('status-ok').addClass('status-err'); }
+    }
+
+    // ==========================================
+    // 9. 初始化回显
+    // ==========================================
+    function initializeUI() {
+        const $verSelect = $('#ww-story-version');
+        $verSelect.empty();
+        if (cachedStoryMap) {
+            cachedStoryMap.forEach((verObj, majorIdx) => {
+                verObj.parts.forEach((title, partIdx) => {
+                    $verSelect.append(`<option value="${majorIdx},${partIdx}">v${verObj.version} Part ${partIdx + 1}: ${title}</option>`);
+                });
+            });
+        }
+        const yaml = cachedOpeningContent;
+        if (yaml) {
+            const isRoverM = yaml.match(/^\s*UI_PlayRover:\s*(true|false)/m);
+            if (isRoverM) state.isRover = (isRoverM[1] === 'true');
+            const myGenM = yaml.match(/^\s*UI_MyGender:\s*"?([^"\r\n]+)"?/m);
+            if (myGenM) state.myGender = myGenM[1];
+            const npcExistM = yaml.match(/^\s*UI_NpcExist:\s*(true|false)/m);
+            if (npcExistM) $('#ww-npc-exists').prop('checked', npcExistM[1] === 'true').trigger('change');
+            const npcGenM = yaml.match(/^\s*UI_NpcGender:\s*"?([^"\r\n]+)"?/m);
+            if (npcGenM) state.npcGender = npcGenM[1];
+            const isStoryM = yaml.match(/^\s*UI_IsStoryMode:\s*(true|false)/m);
+            if (isStoryM) $('#ww-is-story-mode').prop('checked', isStoryM[1] === 'true').trigger('change');
+            const locMain = yaml.match(/^\s*所在区域:\s*"?([^"\r\n]+)"?/m);
+            if (locMain) $('#ww-location-main').val(locMain[1]);
+            const locDet = yaml.match(/^\s*详细地点:\s*"?([^"\r\n]*)"?/m);
+            if (locDet) $('#ww-location-detail').val(locDet[1]);
+            const targetChar = yaml.match(/^\s*目标角色:\s*"?([^"\r\n]*)"?/m);
+            if (targetChar) $('#ww-target-char').val(targetChar[1]);
+            const extraPlot = yaml.match(/^\s*补充剧情:\s*"?([^"\r\n]*)"?/m);
+            if (extraPlot) $('#ww-plot-extra').val(extraPlot[1]);
+            const customId = yaml.match(/^\s*UI_CustomIdentity:\s*"?((?:[^"\\]|\\.)*)"?/m);
+            if (customId) $('#ww-custom-identity').val(customId[1].replace(/\\"/g, '"'));
+            const storyVer = yaml.match(/^\s*UI_StoryVer:\s*"?([^"\r\n]+)"?/m);
+            if (storyVer) $verSelect.val(storyVer[1]);
+            const storyStg = yaml.match(/^\s*UI_StoryStage:\s*"?([^"\r\n]+)"?/m);
+            if (storyStg) $('#ww-story-stage').val(storyStg[1]);
+        }
+        $('#ww-play-rover').prop('checked', state.isRover); 
+        renderGenderSelector();
+        updateNpcGenderUI();
+        if (!state.isRover) {
+            $('#ooc-warning').show();
+            $('#ai-refine-container').show();
+        }
+        startIntroAnimation();
+    }
+    
+    function startIntroAnimation() {
+        $('.wuwa-logo-container').css('animation', 'logoIntro 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards');
+        $('.wuwa-grid').css('animation', 'fadeInUp 0.8s ease 0.6s forwards');
+        $('.action-row').css('animation', 'fadeInUp 0.6s ease 1.0s forwards');
+        $('.status-bar-bottom').css('animation', 'fadeInUp 0.6s ease 1.2s forwards');
+        $('.tutorial-btn').css('animation', 'fadeInUp 0.6s ease 1.2s forwards'); // logo 动画结束后淡入
+    }
+
+    // ==========================================
+    // 10. 提交逻辑
+    // ==========================================
+    function safeReplace(yamlString, key, newValue) {
+        const regex = new RegExp(`(^\\s*${key}\\s*:)(.*)$`, 'm');
+        if (!regex.test(yamlString)) return yamlString;
+        return yamlString.replace(regex, function(match, prefixGroup) { return prefixGroup + ' ' + newValue; });
+    }
+
+    async function forceUpdateFloorZero(config, storyLocTitle) {
+        const MvuObj = ST_WIN.Mvu || globalThis.Mvu;
+        const TH = ST_WIN.TavernHelper || globalThis.TavernHelper;
+        if (!MvuObj && !TH) { toastr.warning("未检测到 Mvu 框架"); return; }
+        let targetData = {};
+        let useMvu = !!MvuObj;
+        try {
+            if (useMvu) { const mData = await MvuObj.getMvuData({ type: 'message', message_id: 0 }); targetData = mData.stat_data || {}; }
+            else { const vars = await TH.getVariables({ type: 'message', message_id: 0 }); targetData = vars.stat_data || {}; }
+        } catch(e) { console.warn("0楼读取失败", e); }
+        targetData._storyState = targetData._storyState || {};
+        targetData._storyState.majorVerIdx = config.majorVerIdx;
+        targetData._storyState.partIdx = config.partIdx;
+        targetData._storyState.isPostScript = config.isPostScript;
+        targetData._storyState._anchorVer = config.anchorVerStr;
+        targetData.指令 = targetData.指令 || {};
+        targetData.指令.推进剧情 = null; targetData.指令.跳转版本 = null; targetData.指令.修改后日谈模式为 = null;
+        targetData.剧情显示 = storyLocTitle;
+        targetData.是否为后日谈 = String(config.isPostScript);
+        targetData.主角信息 = targetData.主角信息 || {};
+        targetData.主角信息.是否是漂泊者 = config.isRover;
+        targetData.主角信息.性别 = config.myGender;
+        targetData.主角信息.身份与额外设定 = config.identity;
+        targetData.NPC漂泊者 = targetData.NPC漂泊者 || {};
+        targetData.NPC漂泊者.是否存在 = config.npcExists;
+        if (config.npcExists) targetData.NPC漂泊者.性别 = config.npcGender;
+        targetData = tryApplyStoryLogic(targetData);
+        try {
+            if (useMvu) await MvuObj.replaceMvuData({ stat_data: targetData }, { type: 'message', message_id: 0 });
+            else await TH.updateVariablesWith((vars) => { vars.stat_data = targetData; return vars; }, { type: 'message', message_id: 0 });
+            toastr.success('✅ 开场数据已就绪！');
+        } catch (e) { toastr.error('数据写入失败: ' + e.message); }
+    }
+
+    $('#ww-start-btn').on('click', async function(e) {
+        e.preventDefault();
+        const charTarget = ($('#ww-target-char').val() || "").trim().replace(/[\r\n]+/g, ' ');
+        if (!charTarget) {
+            toastr.error("❌ 初始化失败：必须填写“开局见到的角色”！", {escapeHtml:false});
+            $('#ww-target-char').focus().css('border-color', '#fc8181');
+            return;
+        }
+        const npcExists = $('#ww-npc-exists').is(':checked');
+        const customInput = ($('#ww-custom-identity').val() || "").trim().replace(/[\r\n]+/g, ' ');
+        let finalIdentity = "";
+        if (state.isRover) {
+            finalIdentity = "寻找归途与失落记忆，且背负着文明火种与救世使命的漂泊者。" + customInput;
+        } else {
+            finalIdentity = customInput || "你是一名来自异世界的穿越者，在意外中降临此世。虽然没有悲鸣赋予的声痕，却意外觉醒了与频率共鸣的能力。你是这个世界的变数，也是未被观测的星火。";
+        }
+        const isStory = $('#ww-is-story-mode').is(':checked');
+        let majorVerIdx = 13, partIdx = 3, isPostScript = true;
+        let storyLocTitle = "v3.0 Part 4 后日谈模式";
+        let storyStageStr = "后日谈";
+        let uiStoryVer = "";
+        if (!isStory && cachedStoryMap && cachedStoryMap.length > 0) {
+            const latestVer = cachedStoryMap[cachedStoryMap.length - 1];
+            majorVerIdx = cachedStoryMap.length - 1;
+            partIdx = latestVer.parts.length - 1;
+            isPostScript = true;
+            const cleanTitle = latestVer.parts[partIdx].replace(/\s*[（\(](上|中|下)[）\)]/g, '');
+            storyLocTitle = `v${latestVer.version} 后日谈: ${cleanTitle} (已完结)`;
+        }
+        if (isStory) {
+            uiStoryVer = $('#ww-story-version').val();
+            const indices = uiStoryVer.split(',');
+            if (indices.length === 2) { majorVerIdx = parseInt(indices[0]); partIdx = parseInt(indices[1]); }
+            storyStageStr = $('#ww-story-stage').val();
+            isPostScript = (storyStageStr === '后日谈');
+            storyLocTitle = $('#ww-story-version option:selected').text();
+        }
+        const targetVerObj = cachedStoryMap ? cachedStoryMap[majorVerIdx] : null;
+        const anchorVerStr = targetVerObj ? targetVerObj.version : (cachedStoryMap && cachedStoryMap.length > 0 ? cachedStoryMap[cachedStoryMap.length - 1].version : '3.0');
+        const config = {
+            majorVerIdx, partIdx, isPostScript, anchorVerStr,
+            isRover: state.isRover,
+            myGender: state.myGender,
+            identity: finalIdentity.replace(/"/g, '\\"'),
+            npcExists, npcGender: state.npcGender
+        };
+        const locMain = $('#ww-location-main').val();
+        const locDetail = ($('#ww-location-detail').val() || "").trim().replace(/[\r\n]+/g, ' ');
+        const plotExtra = ($('#ww-plot-extra').val() || "").trim().replace(/[\r\n]+/g, ' ');
+        await forceUpdateFloorZero(config, storyLocTitle);
+        try {
+            await api_updateWorldbookWith(targetBookName, (entries) => {
+                return entries.map(entry => {
+                    if (entry.uid === initEntryUid) {
+                        let c = entry.content || "";
+                        c = safeReplace(c, 'majorVerIdx', config.majorVerIdx);
+                        c = safeReplace(c, 'partIdx', config.partIdx);
+                        c = safeReplace(c, 'isPostScript', config.isPostScript);
+                        c = safeReplace(c, '_anchorVer', `"${config.anchorVerStr}"`);
+                        let blocks = c.split('NPC漂泊者:');
+                        if (blocks.length > 0) {
+                            blocks[0] = safeReplace(blocks[0], '是否是漂泊者', config.isRover);
+                            blocks[0] = safeReplace(blocks[0], '性别', `"${config.myGender}"`);
+                            blocks[0] = safeReplace(blocks[0], '身份与额外设定', `"${config.identity}"`);
+                        }
+                        if (blocks.length > 1) {
+                            blocks[1] = safeReplace(blocks[1], '是否存在', config.npcExists);
+                            blocks[1] = safeReplace(blocks[1], '性别', `"${config.npcGender}"`);
+                        }
+                        return { ...entry, content: blocks.join('NPC漂泊者:') };
+                    }
+                    if (openingEntryUid !== null && entry.uid === openingEntryUid) {
+                        const openingYaml = 
+`UI_PlayRover: ${state.isRover}
+UI_MyGender: "${state.myGender}"
+UI_NpcExist: ${npcExists}
+UI_NpcGender: "${state.npcGender}"
+UI_IsStoryMode: ${isStory}
+UI_StoryVer: "${uiStoryVer}"
+UI_StoryStage: "${storyStageStr}"
+UI_CustomIdentity: "${customInput.replace(/"/g, '\\"')}"
+所在区域: "${locMain}"
+详细地点: "${locDetail.replace(/"/g, '\\"')}"
+目标角色: "${charTarget.replace(/"/g, '\\"')}"
+补充剧情: "${plotExtra.replace(/"/g, '\\"')}"`;
+                        return { ...entry, content: openingYaml };
+                    }
+                    return entry;
+                });
+            }, { render: 'immediate' });
+        } catch (err) { toastr.error('世界书写入异常: ' + err.message); return; }
+        const locFinal = locDetail ? locDetail : "自由发挥";
+        const plotFinal = plotExtra ? plotExtra : "自由发挥";
+        let finalPrompt = 
+            "<status>\n" +
+            "[系统指令：生成开场剧情]\n" +
+            "1. 剧情定位：" + storyLocTitle + " (" + storyStageStr + ")\n" +
+            "2. 地点：" + locMain + "-" + locFinal + "\n" +
+            "3. 主角设定：" + state.myGender + "性, " + finalIdentity + "\n" +
+            "4. 初始情境：" + plotFinal + "\n" +
+            "5. 互动角色：" + charTarget + "\n\n" +
+            "请根据上述设定，直接开始描写开场剧情。\n" +
+            "请聚焦于环境描写、角色登场以及主角的感官体验。\n" +
+            "如果前文没有特别要求，登场角色无论是谁，都应该穿着其默认装扮。\n" +
+            "如果互动角色无法登场，请使用残响或留下消息等手段，制造无法登场的遗憾感。\n" +
+            "</status>";
+        try {
+            function getChatInput() {
+                if (typeof document !== 'undefined') {
+                    const el = document.querySelector('#send_textarea');
+                    if (el) return el;
+                }
+                if (typeof ST_WIN !== 'undefined' && ST_WIN.document) {
+                    const el = ST_WIN.document.querySelector('#send_textarea');
+                    if (el) return el;
+                }
+                return null;
+            }
+            const inp = getChatInput();
+            if (inp) {
+                const cur = inp.value.trim();
+                inp.value = cur ? cur + '\n' + finalPrompt : finalPrompt;
+                inp.dispatchEvent(new Event('input', { bubbles: true }));
+                toastr.info('已生成情景引导并注入聊天框，请手动发送开始游戏。');
+            } else { toastr.warning('配置已保存，但未能定位到聊天输入框。'); }
+        } catch (err) { console.warn(err); }
+    });
+
+    await detectEnvironment();
+    initializeUI();
+});
+</script>
+
+</body>
+</html>

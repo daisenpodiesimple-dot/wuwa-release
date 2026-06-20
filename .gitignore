@@ -1,0 +1,16 @@
+﻿# Node
+node_modules/
+npm-debug.log*
+
+# OS files
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
