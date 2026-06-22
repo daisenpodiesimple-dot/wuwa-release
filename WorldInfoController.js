@@ -1364,14 +1364,14 @@ function createFloatingWindow() {
   const listMaxH = Math.round(180 * sc);
   
   const html = `
-    <div id='wb-float-monitor' style='position:fixed;top:${SWITCHER_STATE.floatPos.top};left:${SWITCHER_STATE.floatPos.left};width:${floatW}px;background:${SWITCHER_CONFIG.colors.floatBg};border:1px solid ${SWITCHER_CONFIG.colors.border};border-radius:6px;z-index:10001;display:${SWITCHER_STATE.floatVisible ? 'block' : 'none'};color:white;font-family:sans-serif;font-size:${floatFs}px;box-shadow:0 4px 10px rgba(0,0,0,0.5);overflow:hidden;user-select:none;cursor:move;touch-action:none;'>
-      <div id='wb-float-header' style='background:rgba(0,0,0,0.5);padding:${headPad};font-weight:bold;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;'>
+    <div id='wb-float-monitor' style='position:fixed;top:${SWITCHER_STATE.floatPos.top};left:${SWITCHER_STATE.floatPos.left};width:${floatW}px;background:rgba(15,20,30,0.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.3);border-radius:6px;z-index:10001;display:${SWITCHER_STATE.floatVisible ? 'block' : 'none'};color:#e2e8f0;font-family:sans-serif;font-size:${floatFs}px;box-shadow:0 4px 10px rgba(0,0,0,0.5);overflow:hidden;user-select:none;cursor:move;touch-action:none;'>
+      <div id='wb-float-header' style='background:rgba(15,20,30,0.4);background-image:linear-gradient(90deg,rgba(56,189,248,0.15),transparent);padding:${headPad};font-weight:bold;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;'>
         <div style="display:flex;align-items:center;gap:5px;pointer-events:none;">
             <span>📡 实时监控</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-            <span id='wb-float-size-toggle' style='cursor:pointer;opacity:1;font-size:${autoFs}px;' title='${sizeTitle}'>${sizeIcon}</span>
-            <span id='wb-float-close' style='cursor:pointer;opacity:0.8;font-size:${closeFs}px;' title='关闭'>✕</span>
+            <span id='wb-float-size-toggle' style='cursor:pointer;opacity:0.85;font-size:${autoFs}px;transition:0.2s;' title='${sizeTitle}'>${sizeIcon}</span>
+            <span id='wb-float-close' style='cursor:pointer;opacity:0.85;font-size:${closeFs}px;transition:0.2s;' title='关闭'>✕</span>
         </div>
       </div>
       <div id='wb-float-list' style='padding:${listPad}px;max-height:${listMaxH}px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;'></div>
@@ -1450,46 +1450,48 @@ async function refreshFloatingWindowContent() {
     
     // Pro 显示逻辑：默认显示4个，可展开显示最多8个
     if (proList.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#718096;font-weight:bold;'>🟢 Pro(${proList.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;'>🟢 Pro(${proList.length})</div>`);
         const COLLAPSED_MAX = 4;
         const EXPANDED_MAX = 8;
         const maxShow = floatProExpanded ? EXPANDED_MAX : COLLAPSED_MAX;
         const showList = proList.slice(0, maxShow);
-        showList.forEach(p => listEl.append(`<div style='padding:${pad13};background:rgba(72,187,120,0.2);border-radius:2px;color:#9ae6b4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${p.displayName}</div>`));
+        showList.forEach(p => listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.08);border-left:2px solid #48bb78;border-radius:2px;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${p.displayName}</div>`));
         
         if (proList.length > maxShow) {
-            listEl.append(`<div style='padding:${pad13};color:#718096;font-size:${fs8}px;font-style:italic;'>+${proList.length - maxShow}</div>`);
+            listEl.append(`<div style='padding:${pad13};color:#94a3b8;font-size:${fs8}px;font-style:italic;'>+${proList.length - maxShow}</div>`);
         }
         
         if (proList.length > COLLAPSED_MAX) {
             const toggleText = floatProExpanded ? '收起 ▲' : '展开 ▼';
-            listEl.append(`<div class='wb-float-toggle-expand' style='padding:${pad13};color:#63b3ed;font-size:${fs8}px;text-align:center;cursor:pointer;user-select:none;'>${toggleText}</div>`);
+            listEl.append(`<div class='wb-float-toggle-expand' style='padding:${pad13};color:#38bdf8;font-size:${fs8}px;text-align:center;cursor:pointer;user-select:none;'>${toggleText}</div>`);
         }
     } else {
-        listEl.append(`<div style='font-size:${fs9}px;color:#718096;text-align:center;padding:3px;'>无Pro</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:#64748b;text-align:center;padding:3px;'>无Pro</div>`);
     }
 
     // 剧情显示逻辑
     if (activeStories.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#718096;font-weight:bold;margin-top:3px;'>✍️ 剧情(${activeStories.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>✍️ 剧情(${activeStories.length})</div>`);
         activeStories.forEach(s => {
             const stState = getStoryActivationState(s, scanText, displayText);
             const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#ecc94b');
             const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(236,201,75,0.2)');
             const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
-            listEl.append(`<div style='padding:${pad13};background:${bg};border-radius:2px;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('✍️','').trim()}</div>`);
+            const borderColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#ecc94b');
+            listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.06);border-left:2px solid ${borderColor};border-radius:2px;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('✍️','').trim()}</div>`);
         });
     }
     
     // 梗概显示逻辑
     if (activeSummaries.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#718096;font-weight:bold;margin-top:3px;'>🎬 梗概(${activeSummaries.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>🎬 梗概(${activeSummaries.length})</div>`);
         activeSummaries.forEach(s => {
             const stState = getStoryActivationState(s, scanText, displayText);
             const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#d6bcfa');
             const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(159,122,234,0.2)');
             const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
-            listEl.append(`<div style='padding:${pad13};background:${bg};border-radius:2px;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('🎬️','').trim()}</div>`);
+            const sumBorderColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#9f7aea');
+            listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.06);border-left:2px solid ${sumBorderColor};border-radius:2px;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('🎬️','').trim()}</div>`);
         });
     }
 
