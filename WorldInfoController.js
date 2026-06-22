@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @name WuWa 世界书控制 (变量驱动+梗概版)
  * @description v4.0.3 集成角色Pro/Lite、剧情(✍️)、梗概(🎬️)控制。优化了过渡期扫描和悬浮窗显示。
  * @version 4.0.3
@@ -1647,8 +1647,8 @@ function createSwitcherPanel() {
   });
 
   $('#wb-toggle-auto').on('click', function() {
-    SWITCHER_STATE.floatSizeMode = SWITCHER_STATE.floatSizeMode === 'large' ? 'small' : 'large'; saveSettings();
-    $(this).text(SWITCHER_STATE.autoMode ? '🔄 自动: ON' : '🔄 自动: OFF'); // [修改] 对应精简文本
+    SWITCHER_STATE.autoMode = !SWITCHER_STATE.autoMode; saveSettings();
+    $(this).text(SWITCHER_STATE.autoMode ? '🔄 自动: ON' : '🔄 自动: OFF');
     $(this).css('background', SWITCHER_STATE.autoMode ? SWITCHER_CONFIG.colors.pro : SWITCHER_CONFIG.colors.inactive);
     
     const floatBtn = $('#wb-float-auto-toggle');
@@ -1658,6 +1658,7 @@ function createSwitcherPanel() {
     }
 
     if (SWITCHER_STATE.autoMode) { toastr.info('自动模式已开启'); masterLoop(); }
+    else { toastr.info('自动模式已关闭'); }
   });
 
   $('#wb-settings-btn').on('click', async function() {
