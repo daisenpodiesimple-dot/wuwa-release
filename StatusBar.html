@@ -628,6 +628,20 @@
     body.light-mode .sc-content.editable-text,
     body.light-mode .sc-content .editable-text { color: #475569 !important; }
     body.light-mode .log-content { color: #475569 !important; }
+
+    /* === 白天模式：剧情触发器/伏笔/性爱监控修正灰底白字看不清 === */
+    /* 性爱监控：文字改深色 */
+    body.light-mode #sex-monitor .sex-row-text { color: #334155 !important; }
+    body.light-mode #sex-monitor .sex-row-text span { color: #334155 !important; }
+    /* 性爱进度条底色加深，避免浅色背景上看不见轨道 */
+    body.light-mode .progress-track { background: rgba(15, 23, 42, 0.18) !important; }
+    /* 剧情触发器：条目背景改浅、文字加深 */
+    body.light-mode .trigger-item { background: rgba(15, 23, 42, 0.05) !important; }
+    body.light-mode .trigger-desc { color: #334155 !important; }
+    body.light-mode .trigger-badge { background: rgba(56, 189, 248, 0.12) !important; }
+    /* 伏笔：条目背景改浅、正文加深 */
+    body.light-mode .foreshadow-item { background: rgba(15, 23, 42, 0.05) !important; }
+    body.light-mode .foreshadow-content { color: #475569 !important; }
     .tide-nav { height: 44px; display: flex; background: transparent; border-top: none; transition: background 0.4s ease; }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); font-size: 10px; gap: 2px; transition: 0.3s; border-top: 3px solid transparent; }
     .nav-btn:hover { color: var(--text-main); background: var(--overlay); }
@@ -2078,7 +2092,7 @@
                 <div style="font-size:11px;color:var(--accent-color);margin-bottom:4px;font-weight:bold">♥ 性爱状态</div>` +
                 activeSex.map(d => `
                 <div class="sex-row">
-                    <div style="display:flex;justify-content:space-between;color:#fff;"><span>${d.name}</span><span>${d.count}/${d.max}次</span></div>
+                    <div class="sex-row-text" style="display:flex;justify-content:space-between;"><span>${d.name}</span><span>${d.count}/${d.max}次</span></div>
                     <div class="progress-track"><div class="progress-bar ${d.type==='user'?'pb-user':'pb-fem'}" style="width:${d.progress}%"></div></div>
                 </div>`).join('') + `</div>`;
         }
@@ -2151,10 +2165,10 @@
             const badgeBg = isActive ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255,255,255,0.05)';
             const timerBlock = t.事件计时 ? `<div style="margin-top:2px; font-family:monospace; font-size:10px; color:var(--accent-bright); border:1px solid ${color}; border-radius:3px; padding:0 3px; display:inline-block">${t.事件计时}</div>` : '';
             return `
-            <div style="margin-bottom:6px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:4px;border-left:2px solid ${color};font-size:11px; display:flex; justify-content:space-between; align-items:flex-start; gap: 8px;">
+            <div class="trigger-item" style="margin-bottom:6px;padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:4px;border-left:2px solid ${color};font-size:11px; display:flex; justify-content:space-between; align-items:flex-start; gap: 8px;">
                 <div style="display:flex; flex-direction:column; gap:4px; flex:1;">
-                    <span style="background:${badgeBg};color:${color};padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;width:fit-content; line-height:1.2;">${t.事件类别||'事件'}</span>
-                    <div style="color:#e2e8f0;line-height:1.4; word-break: break-all;">${t.事件简述 || '暂无描述'}</div>
+                    <span class="trigger-badge" style="background:${badgeBg};color:${color};padding:1px 6px;border-radius:3px;font-size:10px;font-weight:bold;width:fit-content; line-height:1.2;">${t.事件类别||'事件'}</span>
+                    <div class="trigger-desc" style="color:#e2e8f0;line-height:1.4; word-break: break-all;">${t.事件简述 || '暂无描述'}</div>
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; flex:0 0 auto; gap:2px;">
                     <span style="color:${color};font-weight:bold;opacity:0.9; line-height:1.2;">${t.状态}</span>
@@ -2169,9 +2183,9 @@
 
         const fores = sd.伏笔 || [];
         const foresHtml = fores.length ? fores.map((f, idx) => `
-            <div style="margin-bottom:4px;padding:4px;background:rgba(0,0,0,0.2);border-radius:4px;font-size:11px; display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="foreshadow-item" style="margin-bottom:4px;padding:4px;background:rgba(0,0,0,0.2);border-radius:4px;font-size:11px; display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="flex:1">
-                    <div style="color:#cbd5e1">${f.伏笔内容}</div>
+                    <div class="foreshadow-content" style="color:#cbd5e1">${f.伏笔内容}</div>
                     <div style="color:var(--accent-color);margin-top:2px">→ ${f.指向的预期结果}</div>
                 </div>
                 <div style="flex:0 0 auto; margin-left:6px">
