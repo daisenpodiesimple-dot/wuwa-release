@@ -1,4 +1,4 @@
-﻿# Node
+# Node
 node_modules/
 npm-debug.log*
 
@@ -14,3 +14,17 @@ Desktop.ini
 # Env
 .env
 .env.local
+
+# AI working files (not for release)
+function/
+tavern_resource-main/
+float_preview.html
+
+# GitHub Release repo (managed separately via GitHub API)
+GitHub_Release/
+
+# Character card (local backup only, not for gitgud)
+Character/
+
+# Changelog (managed via GitHub Release, not for gitgud)
+changelog.md
