@@ -72,6 +72,12 @@ function getSimpTradType(entryName) {
   return 'none';
 }
 
+// [新增] 简繁过滤：条目是否属于当前简繁模式（none 视为通用，两模式都通过）
+function matchSimpTradMode(simpTrad, mode) {
+  if (simpTrad === 'none') return true;
+  return simpTrad === mode;
+}
+
 // 触发判断逻辑
 function checkStoryActivation(entry, scanText) {
 
@@ -93,6 +99,49 @@ function checkStoryActivation(entry, scanText) {
         });
     }
     return false;
+}
+
+// [新增] 自动蓝灯：只读取"剧情显示"变量，用于判定剧情/梗概条目是否被自动激活
+async function getStoryDisplayText() {
+    try {
+        let vars = null;
+        if (window.TavernHelper && typeof TavernHelper.getVariables === 'function') {
+            vars = await TavernHelper.getVariables({ type: 'message', message_id: -1 });
+        } else if (typeof getAllVariables === 'function') {
+            vars = getAllVariables();
+        }
+        if (vars && vars.stat_data) {
+            return _.get(vars, 'stat_data.剧情显示', '') || '';
+        }
+    } catch(e) {}
+    return '';
+}
+
+// [新增] 自动蓝灯判定：条目已启用 + 非constant + 剧情显示文本包含其任一关键词
+// 与手动蓝灯(constant)区别：自动蓝灯不修改strategy，仅作为本轮激活判定
+function checkAutoBlueActivation(entry, displayText) {
+    if (!entry || !entry.enabled) return false;
+    const strategy = entry.strategy;
+    if (!strategy) return false;
+    if (strategy.type === 'constant') return false; // 手动蓝灯优先，不重复判定
+    const keys = strategy.keys || [];
+    if (keys.length === 0) return false;
+    const textLower = (displayText || '').toLowerCase();
+    return keys.some(key => {
+        if (typeof key === 'string') return textLower.includes(key.toLowerCase());
+        return false;
+    });
+}
+
+// [新增] 综合激活判定：返回 { active, mode }
+// mode: 'manualBlue'(constant) | 'autoBlue'(剧情显示命中) | 'green'(世界书扫描命中) | null
+function getStoryActivationState(entry, scanText, displayText) {
+    if (!entry || !entry.enabled) return { active: false, mode: null };
+    const strategy = entry.strategy;
+    if (strategy && strategy.type === 'constant') return { active: true, mode: 'manualBlue' };
+    if (checkAutoBlueActivation(entry, displayText)) return { active: true, mode: 'autoBlue' };
+    if (checkStoryActivation(entry, scanText)) return { active: true, mode: 'green' };
+    return { active: false, mode: null };
 }
 
 async function scanAndPairEntries() {
@@ -133,11 +182,11 @@ async function scanAndPairEntries() {
 
     entries.forEach(entry => {
       if (entry.name.includes('✍️')) {
-        stories.push({ uid: entry.uid, name: entry.name, enabled: entry.enabled, bookName: targetBook, strategy: entry.strategy });
+        stories.push({ uid: entry.uid, name: entry.name, enabled: entry.enabled, bookName: targetBook, strategy: entry.strategy, simpTrad: getSimpTradType(entry.name) });
         return;
       }
       if (entry.name.includes('🎬️')) {
-        summaries.push({ uid: entry.uid, name: entry.name, enabled: entry.enabled, bookName: targetBook, strategy: entry.strategy });
+        summaries.push({ uid: entry.uid, name: entry.name, enabled: entry.enabled, bookName: targetBook, strategy: entry.strategy, simpTrad: getSimpTradType(entry.name) });
         return;
       }
 
@@ -235,11 +284,16 @@ async function executeSimpTradSwitch(targetMode) {
 
     const ops = [];
     const enableMarker = targetMode === 'simp' ? '(简)' : '(繁)';
-    const disableMarker = targetMode === 'simp' ? '(繁)' : '(简)';
 
     entries.forEach(entry => {
-      // 包含需要启用的标记 → 角色默认开 Lite（关 Pro），由自动循环决定谁升 Pro
-      if (entry.name.includes(enableMarker)) {
+      const eSimpTrad = getSimpTradType(entry.name);
+      // 非当前模式的简繁条目（含剧情/梗概）：一律关闭，不做其他改动
+      if (eSimpTrad !== 'none' && eSimpTrad !== targetMode) {
+        ops.push({ uid: entry.uid, enable: false });
+        return;
+      }
+      // 当前模式或无标记的条目：
+      if (eSimpTrad === targetMode || (eSimpTrad === 'none' && entry.name.includes(enableMarker))) {
         const type = getEntryType(entry.name);
         if (type === 'pro') {
           ops.push({ uid: entry.uid, enable: false });
@@ -249,10 +303,6 @@ async function executeSimpTradSwitch(targetMode) {
           // 非角色词条（剧情/梗概/其他），直接启用
           ops.push({ uid: entry.uid, enable: true });
         }
-      }
-      // 包含需要关闭的标记 → 全部关闭
-      if (entry.name.includes(disableMarker)) {
-        ops.push({ uid: entry.uid, enable: false });
       }
     });
 
@@ -356,12 +406,12 @@ async function togglePinStatus(coreKey) {
       if (idx > -1) {
           // 取消永久Pro
           pinned.splice(idx, 1);
-          await insertOrAssignVariables({ wuwa_pinned_chars: pinned }, { type: 'global' });
+          await updateVariablesWith(v => { _.set(v, 'wuwa_pinned_chars', pinned); return v; }, { type: 'global' });
           toastr.success('已取消永久Pro ⭐');
       } else {
           // 设为永久Pro：先写入全局变量
           pinned.unshift(coreKey);
-          await insertOrAssignVariables({ wuwa_pinned_chars: pinned }, { type: 'global' });
+          await updateVariablesWith(v => { _.set(v, 'wuwa_pinned_chars', pinned); return v; }, { type: 'global' });
           
           // 立即强制开启该角色的Pro（不占名额）
           const res = await scanAndPairEntries();
@@ -460,6 +510,8 @@ async function logicScanContext(localData) {
       let tempLiteChars = [];
       let manualProSeenPresent = [];
       let tempLiteSeenPresent = []; // 记录暂时 Lite 角色是否已实际出场过
+      let nextEventSeen = []; // 记录曾经被下一事件节点提及过的角色（用于降级判定）
+      let nextEventEvictedAt = {}; // 记录角色变为 evictedNextEvent 的时间戳（毫秒），用于3分钟宽限期
       try {
           const globals = await getVariables({ type: 'global' });
           if (globals && globals.wuwa_max_pro_count !== undefined) {
@@ -473,6 +525,12 @@ async function logicScanContext(localData) {
           }
           if (globals && Array.isArray(globals.wuwa_temp_lite_seen_present)) {
               tempLiteSeenPresent = globals.wuwa_temp_lite_seen_present;
+          }
+          if (globals && Array.isArray(globals.wuwa_next_event_seen)) {
+              nextEventSeen = globals.wuwa_next_event_seen;
+          }
+          if (globals && globals.wuwa_next_event_evicted_at && typeof globals.wuwa_next_event_evicted_at === 'object') {
+              nextEventEvictedAt = globals.wuwa_next_event_evicted_at;
           }
       } catch(e) {}
 
@@ -548,8 +606,9 @@ async function logicScanContext(localData) {
           // - manualPro: 🔒手动临时Pro，占名额，视为在场（优先级高于自动）
           // - autoCandidate: 在场但非pinned非manualPro → 自动候选
           // - tempLite: 在场但被手动锁定为Lite → 不参与Pro分配，离场后自动解除
-          // - nextEventCandidate: 不在场但在"即将进行的下一个事件节点"中被提及 → 低优先级候选
+          // - nextEventCandidate: 不在场但在"即将进行的下一个事件节点"中被提及 → 与在场候选共同竞争名额（在场优先）
           // - absentSticky: 不在场但当前是Pro（非pinned非manualPro）→ 粘性Pro
+          // - evictedNextEvent: 曾被下一节点提及、本轮不再被提及、当前是Pro → 低于粘性，最易淘汰
           // - absentLite: 不在场且不是Pro
           let category = 'autoCandidate';
           if (char.isPinned) {
@@ -605,17 +664,53 @@ async function logicScanContext(localData) {
                 }
             }
 
+            // evictedNextEvent 宽限期（毫秒）：被预告但未登场、预告消失后，给3分钟等它登场，到期强制 Lite
+            const EVICTED_GRACE_MS = 3 * 60 * 1000;
             // 如果角色在暂时 Lite 锁定名单中，即使被下一事件节点提及也不能成为候选，强制归为 Lite
+            // 同时清除其下一节点历史和降级计时（手动 Lite 即打入冷宫，不再保留预告记忆）
             if (tempLiteChars.includes(char.coreKey)) {
                 category = 'absentLite';
+                const _tl = nextEventSeen.indexOf(char.coreKey); if (_tl >= 0) nextEventSeen.splice(_tl, 1);
+                if (nextEventEvictedAt.hasOwnProperty(char.coreKey)) delete nextEventEvictedAt[char.coreKey];
             } else if (mentionedInNextEvent) {
                 category = 'nextEventCandidate'; // 不在场但被下一事件节点提及（优先于粘性）
+                if (!nextEventSeen.includes(char.coreKey)) nextEventSeen.push(char.coreKey);
+                // 重新被提及 → 清除降级计时（重置）
+                if (nextEventEvictedAt.hasOwnProperty(char.coreKey)) delete nextEventEvictedAt[char.coreKey];
+            } else if (char.proEnabled && nextEventSeen.includes(char.coreKey)) {
+                // 曾被下一节点提及、本轮不再被提及、当前是Pro → 进入降级宽限期
+                const now = Date.now();
+                const evictedAt = nextEventEvictedAt[char.coreKey];
+                if (evictedAt && (now - evictedAt) >= EVICTED_GRACE_MS) {
+                    // 宽限期已过仍未登场 → 打入冷宫，强制 Lite
+                    category = 'absentLite';
+                    // 惩罚执行完毕，清除历史标记
+                    const i1 = nextEventSeen.indexOf(char.coreKey); if (i1 >= 0) nextEventSeen.splice(i1, 1);
+                    if (nextEventEvictedAt.hasOwnProperty(char.coreKey)) delete nextEventEvictedAt[char.coreKey];
+                    console.log(`[WuWa Logic] ⏰ 降级宽限期到期：${char.displayName} 已强制降为 Lite`);
+                } else {
+                    // 宽限期内：保持 Pro 但优先级最低（易被挤），并记录开始计时
+                    if (!evictedAt) nextEventEvictedAt[char.coreKey] = now;
+                    category = 'evictedNextEvent';
+                }
             } else if (char.proEnabled) {
                 category = 'absentSticky'; // 不在场但当前是Pro（粘性保留）
             } else {
                 category = 'absentLite'; // 不在场且不是Pro
             }
         }
+
+          // 角色实际在场 → 洗白：从下一节点历史和降级计时中清除（登场即原谅）
+          if (isPresent) {
+              const _i = nextEventSeen.indexOf(char.coreKey); if (_i >= 0) nextEventSeen.splice(_i, 1);
+              if (nextEventEvictedAt.hasOwnProperty(char.coreKey)) delete nextEventEvictedAt[char.coreKey];
+          }
+          // 兜底：角色当前不是 Pro（含手动 Lite、被自动踢成 Lite 等）却在下一节点历史里 → 清除历史
+          // 避免"手动开 Pro 又被 evictedNextEvent 自动踢"的循环
+          if (!char.proEnabled && nextEventSeen.includes(char.coreKey)) {
+              const _j = nextEventSeen.indexOf(char.coreKey); if (_j >= 0) nextEventSeen.splice(_j, 1);
+              if (nextEventEvictedAt.hasOwnProperty(char.coreKey)) delete nextEventEvictedAt[char.coreKey];
+          }
 
           allCharInfos.push({ char, isPresent, affinity, category });
 
@@ -655,9 +750,17 @@ async function logicScanContext(localData) {
       });
       
       // 4.5 下一事件节点候选角色（不在场但被"即将进行的下一个事件节点"提及）
-      //     优先级低于在场角色，高于粘性角色，可被正常淘汰
+      //     与在场候选共同竞争名额，但优先级低于在场角色
       const nextEventCandidates = allCharInfos.filter(c => c.category === 'nextEventCandidate');
       nextEventCandidates.sort((a, b) => {
+          if (b.affinity !== a.affinity) return b.affinity - a.affinity;
+          return a.char.displayName.localeCompare(b.char.displayName, 'zh-CN');
+      });
+
+      // 4.6 降级候选：曾经被下一节点提及、本轮不再被提及、当前是Pro
+      //     优先级低于粘性Pro，最易被淘汰
+      const evictedNextEventChars = allCharInfos.filter(c => c.category === 'evictedNextEvent');
+      evictedNextEventChars.sort((a, b) => {
           if (b.affinity !== a.affinity) return b.affinity - a.affinity;
           return a.char.displayName.localeCompare(b.char.displayName, 'zh-CN');
       });
@@ -673,21 +776,32 @@ async function logicScanContext(localData) {
       // 6. 不在场且不是Pro的角色（必然是Lite）
       const absentLiteChars = allCharInfos.filter(c => c.category === 'absentLite');
       
-      // 7. 填充自动Pro：前 remainingSlots 个自动候选 → Pro
-      const autoProChars = autoCandidates.slice(0, remainingSlots);
-      const autoLiteCandidates = autoCandidates.slice(remainingSlots);
-      
-// 7.5 下一事件节点候选：自动候选未填满的剩余名额，由下一事件节点填补
-const nextEventRemainingSlots = Math.max(0, remainingSlots - autoProChars.length);
-let nextEventProChars = nextEventCandidates.slice(0, nextEventRemainingSlots);
-let nextEventLiteChars = nextEventCandidates.slice(nextEventRemainingSlots);
+      // 7. 合并候选池：在场autoCandidate + 下一节点候选，共同竞争 remainingSlots
+      //    优先级：在场角色 > 下一节点候选（同好感度时在场排前）
+      const mergedCandidates = [...autoCandidates, ...nextEventCandidates];
+      mergedCandidates.sort((a, b) => {
+          // 在场优先：isPresent true 排前
+          if (a.isPresent !== b.isPresent) return a.isPresent ? -1 : 1;
+          if (b.affinity !== a.affinity) return b.affinity - a.affinity;
+          return a.char.displayName.localeCompare(b.char.displayName, 'zh-CN');
+      });
+      const mergedProChars = mergedCandidates.slice(0, remainingSlots);
+      const mergedLiteCandidates = mergedCandidates.slice(remainingSlots);
+      // 拆分回 auto/nextEvent 以兼容后续变量名
+      const autoProChars = mergedProChars.filter(c => c.category === 'autoCandidate');
+      const autoLiteCandidates = mergedLiteCandidates.filter(c => c.category === 'autoCandidate');
+      let nextEventProChars = mergedProChars.filter(c => c.category === 'nextEventCandidate');
+      let nextEventLiteChars = mergedLiteCandidates.filter(c => c.category === 'nextEventCandidate');
 
-
-      // 8. 🔧 粘性Pro名额：仅在自动候选和下一事件候选均未填满剩余名额时，粘性角色才能保留Pro
-      const usedByNextEvent = nextEventProChars.length;
-      const stickySlots = Math.max(0, nextEventRemainingSlots - usedByNextEvent);
+      // 8. 🔧 粘性Pro名额：合并候选填完后剩余名额给粘性，再剩余给降级候选
+      const usedByMerged = mergedProChars.length;
+      const stickySlots = Math.max(0, remainingSlots - usedByMerged);
       const stickyProChars = absentStickyChars.slice(0, stickySlots);
       const evictedStickyChars = absentStickyChars.slice(stickySlots); // 被淘汰的粘性角色 → 降级为Lite
+      // 8.5 降级候选名额：粘性填完后仍有剩余，才保留降级候选的Pro
+      const evictedNextRemainingSlots = Math.max(0, stickySlots - stickyProChars.length);
+      const evictedNextProChars = evictedNextEventChars.slice(0, evictedNextRemainingSlots);
+      const evictedNextLiteChars = evictedNextEventChars.slice(evictedNextRemainingSlots);
       
       // ========== 第二阶段附：清理暂时Lite名单 + 手动Pro离场降级 ==========
       
@@ -762,10 +876,34 @@ if (tempLiteToRemove.length > 0) {
           }
       } catch(e) {}
       
-      // 3d. 一次性写入
+      // 3c2. nextEventSeen / nextEventEvictedAt 持久化（用 updateVariablesWith 显式 set/unset，避免 lodash 深合并导致空对象无法清空旧键）
+      try {
+          await updateVariablesWith(v => {
+              // nextEventSeen：以本轮内存为准整体替换
+              _.set(v, 'wuwa_next_event_seen', [...nextEventSeen]);
+              // nextEventEvictedAt：以本轮内存为准整体替换（空对象时用 unset 彻底删除键，否则 set）
+              if (Object.keys(nextEventEvictedAt).length === 0) {
+                  _.unset(v, 'wuwa_next_event_evicted_at');
+              } else {
+                  _.set(v, 'wuwa_next_event_evicted_at', { ...nextEventEvictedAt });
+              }
+              return v;
+          }, { type: 'global' });
+      } catch(e) { console.warn('[WuWa Logic] nextEventSeen/evictedAt 持久化失败:', e); }
+      
+      // 3d. 一次性写入（用 updateVariablesWith + _.set 整体替换每个键，避免深合并导致数组/对象清不干净）
       if (Object.keys(updateVars).length > 0) {
           try {
-              await insertOrAssignVariables(updateVars, { type: 'global' });
+              await updateVariablesWith(v => {
+                  for (const k in updateVars) {
+                      if (updateVars[k] === null || (Array.isArray(updateVars[k]) && updateVars[k].length === 0)) {
+                          _.unset(v, k);
+                      } else {
+                          _.set(v, k, updateVars[k]);
+                      }
+                  }
+                  return v;
+              }, { type: 'global' });
           } catch(e) {}
       }
 
@@ -779,7 +917,8 @@ if (tempLiteToRemove.length > 0) {
           ...manualProChars.map(c => c.char.coreKey),
           ...autoProChars.map(c => c.char.coreKey),
           ...nextEventProChars.map(c => c.char.coreKey),
-          ...stickyProChars.map(c => c.char.coreKey)
+          ...stickyProChars.map(c => c.char.coreKey),
+          ...evictedNextProChars.map(c => c.char.coreKey)
       ]);
 
       
@@ -799,7 +938,7 @@ if (tempLiteToRemove.length > 0) {
 
       if (ops.length > 0) {
           if (shouldAbortChange(localData, ops)) return;
-          console.log(`[WuWa Loop] Variable Change Detected (Context): ${ops.length} 条更新 | 永久Pro:${pinnedChars.length} 手动Pro:${manualCount} 自动Pro:${autoProChars.length} 事件节点Pro:${nextEventProChars.length} 粘性Pro:${stickyProChars.length} 淘汰粘性:${evictedStickyChars.length} 暂时Lite:${allCharInfos.filter(c=>c.category==='tempLite').length} 上限:${maxProCount}`);
+          console.log(`[WuWa Loop] Variable Change Detected (Context): ${ops.length} 条更新 | 永久Pro:${pinnedChars.length} 手动Pro:${manualCount} 自动Pro:${autoProChars.length} 事件节点Pro:${nextEventProChars.length} 粘性Pro:${stickyProChars.length} 降级Pro:${evictedNextProChars.length} 淘汰粘性:${evictedStickyChars.length} 暂时Lite:${allCharInfos.filter(c=>c.category==='tempLite').length} 上限:${maxProCount}`);
 
           await applyChanges(localData.pairs[0].bookName, ops, true); 
       }
@@ -828,8 +967,16 @@ async function logicScanInput(localData) {
     
       // [新增] 开场指令触发时，清空手动Pro队列、暂时Lite名单和已见在场记录
     try {
-        await insertOrAssignVariables({ wuwa_manual_pro_chars: [], wuwa_temp_lite_chars: [], wuwa_manual_pro_seen_present: [], wuwa_temp_lite_seen_present: []}, { type: 'global' });
-        console.log('[WuWa Logic] 🧹 开场指令触发，已清空手动Pro队列、暂时Lite名单和已见在场记录');
+        await updateVariablesWith(v => {
+            _.set(v, 'wuwa_manual_pro_chars', []);
+            _.set(v, 'wuwa_temp_lite_chars', []);
+            _.set(v, 'wuwa_manual_pro_seen_present', []);
+            _.set(v, 'wuwa_temp_lite_seen_present', []);
+            _.set(v, 'wuwa_next_event_seen', []);
+            _.unset(v, 'wuwa_next_event_evicted_at');
+            return v;
+        }, { type: 'global' });
+        console.log('[WuWa Logic] 🧹 开场指令触发，已清空手动Pro队列、暂时Lite名单、已见在场记录、下一节点历史和降级计时');
     } catch(e) {}
 
 
@@ -1034,8 +1181,16 @@ async function logicScanFloorZero(localData) {
         if (!hasPresent) return false; // 无人在场，不需要干预
         
         // 有角色在场：清空手动Pro队列、暂时Lite名单和已见在场记录
-        await insertOrAssignVariables({ wuwa_manual_pro_chars: [], wuwa_temp_lite_chars: [], wuwa_manual_pro_seen_present: [], wuwa_temp_lite_seen_present: [] }, { type: 'global' });
-        console.log('[WuWa Logic] 🏠 楼层0强制同步：已清空手动Pro队列、暂时Lite名单和已见在场记录');
+        await updateVariablesWith(v => {
+            _.set(v, 'wuwa_manual_pro_chars', []);
+            _.set(v, 'wuwa_temp_lite_chars', []);
+            _.set(v, 'wuwa_manual_pro_seen_present', []);
+            _.set(v, 'wuwa_temp_lite_seen_present', []);
+            _.set(v, 'wuwa_next_event_seen', []);
+            _.unset(v, 'wuwa_next_event_evicted_at');
+            return v;
+        }, { type: 'global' });
+        console.log('[WuWa Logic] 🏠 楼层0强制同步：已清空手动Pro队列、暂时Lite名单、已见在场记录、下一节点历史和降级计时');
         
         // 强制只开启在场角色的Pro条目，其余一律Lite
         const ops = [];
@@ -1168,11 +1323,13 @@ async function masterLoop() {
 
 
 
-  // 剧情和梗概的悬浮窗扫描逻辑 (保持不变)
+  // 剧情和梗概的悬浮窗扫描逻辑 (含自动蓝灯)
   try {
       const scanText = await getFullContextVar();
-      const activeStories = data.stories.filter(s => s.enabled && checkStoryActivation(s, scanText));
-      const activeSummaries = data.summaries.filter(s => s.enabled && checkStoryActivation(s, scanText));
+      const displayText = await getStoryDisplayText();
+      const _mode = SWITCHER_STATE.simpTradMode;
+      const activeStories = data.stories.filter(s => s.enabled && matchSimpTradMode(s.simpTrad, _mode) && getStoryActivationState(s, scanText, displayText).active);
+      const activeSummaries = data.summaries.filter(s => s.enabled && matchSimpTradMode(s.simpTrad, _mode) && getStoryActivationState(s, scanText, displayText).active);
       
       const currentActiveIds = [
           ...activeStories.map(s => s.uid),
@@ -1276,10 +1433,12 @@ async function refreshFloatingWindowContent() {
     // 1. Pro 角色列表
     const proList = res.pairs.filter(p => p.proEnabled);
     
-    // 2. 扫描激活项
+    // 2. 扫描激活项（含自动蓝灯）
     const scanText = await getFullContextVar();
-    const activeStories = res.stories.filter(s => s.enabled && checkStoryActivation(s, scanText));
-    const activeSummaries = res.summaries.filter(s => s.enabled && checkStoryActivation(s, scanText));
+    const displayText = await getStoryDisplayText();
+    const _fmode = SWITCHER_STATE.simpTradMode;
+    const activeStories = res.stories.filter(s => s.enabled && matchSimpTradMode(s.simpTrad, _fmode) && getStoryActivationState(s, scanText, displayText).active);
+    const activeSummaries = res.summaries.filter(s => s.enabled && matchSimpTradMode(s.simpTrad, _fmode) && getStoryActivationState(s, scanText, displayText).active);
 
     const listEl = $('#wb-float-list').empty();
     
@@ -1314,10 +1473,10 @@ async function refreshFloatingWindowContent() {
     if (activeStories.length > 0) {
         listEl.append(`<div style='font-size:${fs9}px;color:#718096;font-weight:bold;margin-top:3px;'>✍️ 剧情(${activeStories.length})</div>`);
         activeStories.forEach(s => {
-            const isConstant = s.strategy?.type === 'constant';
-            const color = isConstant ? '#63b3ed' : '#ecc94b'; 
-            const bg = isConstant ? 'rgba(99,179,237,0.2)' : 'rgba(236,201,75,0.2)';
-            const icon = isConstant ? '🔵' : '⚡';
+            const stState = getStoryActivationState(s, scanText, displayText);
+            const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#ecc94b');
+            const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(236,201,75,0.2)');
+            const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
             listEl.append(`<div style='padding:${pad13};background:${bg};border-radius:2px;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('✍️','').trim()}</div>`);
         });
     }
@@ -1326,10 +1485,10 @@ async function refreshFloatingWindowContent() {
     if (activeSummaries.length > 0) {
         listEl.append(`<div style='font-size:${fs9}px;color:#718096;font-weight:bold;margin-top:3px;'>🎬 梗概(${activeSummaries.length})</div>`);
         activeSummaries.forEach(s => {
-            const isConstant = s.strategy?.type === 'constant';
-            const color = isConstant ? '#63b3ed' : '#d6bcfa'; 
-            const bg = isConstant ? 'rgba(99,179,237,0.2)' : 'rgba(159,122,234,0.2)';
-            const icon = isConstant ? '🔵' : '⚡';
+            const stState = getStoryActivationState(s, scanText, displayText);
+            const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#d6bcfa');
+            const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(159,122,234,0.2)');
+            const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
             listEl.append(`<div style='padding:${pad13};background:${bg};border-radius:2px;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('🎬️','').trim()}</div>`);
         });
     }
@@ -1697,7 +1856,7 @@ function renderListChars() {
             if (!tempLiteChars.includes(i.coreKey)) {
                 tempLiteChars.push(i.coreKey);
             }
-            await insertOrAssignVariables({ wuwa_manual_pro_chars: manualProChars, wuwa_temp_lite_chars: tempLiteChars }, { type: 'global' });
+            await updateVariablesWith(v => { _.set(v, 'wuwa_manual_pro_chars', manualProChars); _.set(v, 'wuwa_temp_lite_chars', tempLiteChars); return v; }, { type: 'global' });
             await applyChanges(i.bookName, [{uid:i.liteUid,enable:true}, i.proUid?{uid:i.proUid,enable:false}:null].filter(Boolean)); 
             $(this).closest('.wb-item-row').find('.wb-btn-pro').css({background:'transparent',color:'#a0aec0'}); 
             $(this).closest('.wb-item-row').find('.wb-btn-lite').css({background:SWITCHER_CONFIG.colors.lite,color:'white'});
@@ -1743,7 +1902,7 @@ function renderListChars() {
         if (tIdx > -1) {
             tempLiteChars.splice(tIdx, 1);
         }
-        await insertOrAssignVariables({ wuwa_manual_pro_chars: manualProChars, wuwa_temp_lite_chars: tempLiteChars }, { type: 'global' });
+        await updateVariablesWith(v => { _.set(v, 'wuwa_manual_pro_chars', manualProChars); _.set(v, 'wuwa_temp_lite_chars', tempLiteChars); return v; }, { type: 'global' });
     }
     
     await applyChanges(i.bookName, [{uid:i.proUid,enable:true}, i.liteUid?{uid:i.liteUid,enable:false}:null].filter(Boolean)); 
@@ -1797,7 +1956,7 @@ $('.wb-btn-lite').on('click', async function() {
         if (!tempLiteChars.includes(i.coreKey)) {
             tempLiteChars.push(i.coreKey);
         }
-        await insertOrAssignVariables({ wuwa_manual_pro_chars: manualProChars, wuwa_temp_lite_chars: tempLiteChars }, { type: 'global' });
+        await updateVariablesWith(v => { _.set(v, 'wuwa_manual_pro_chars', manualProChars); _.set(v, 'wuwa_temp_lite_chars', tempLiteChars); return v; }, { type: 'global' });
     }
     
     await applyChanges(i.bookName, [{uid:i.liteUid,enable:true}, i.proUid?{uid:i.proUid,enable:false}:null].filter(Boolean)); 
@@ -1818,32 +1977,40 @@ function renderGlobalButtonsStories() {
   $('#wb-global-btns').html(`
     <button id='wb-story-all-on' style='flex:1;background:${SWITCHER_CONFIG.colors.storyOn};color:white;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;opacity:0.9;'>✍️ 全部开启</button>
     <button id='wb-story-all-off' style='flex:1;background:${SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;opacity:0.9;'>⛔ 全部关闭</button>`);
-  $('#wb-story-all-on').on('click', async () => { if(!currentData.stories.length)return; await applyChanges(currentData.stories[0].bookName, currentData.stories.map(s=>({uid:s.uid,enable:true}))); toastr.success('已开启所有剧情'); loadDataAndRender(); });
-  $('#wb-story-all-off').on('click', async () => { if(!currentData.stories.length)return; await applyChanges(currentData.stories[0].bookName, currentData.stories.map(s=>({uid:s.uid,enable:false}))); toastr.success('已关闭所有剧情'); loadDataAndRender(); });
+  const _allSMode = SWITCHER_STATE.simpTradMode;
+  const _allSVisible = currentData.stories.filter(s => matchSimpTradMode(s.simpTrad, _allSMode));
+  $('#wb-story-all-on').on('click', async () => { if(!_allSVisible.length)return; await applyChanges(_allSVisible[0].bookName, _allSVisible.map(s=>({uid:s.uid,enable:true}))); toastr.success('已开启当前模式所有剧情'); loadDataAndRender(); });
+  $('#wb-story-all-off').on('click', async () => { if(!_allSVisible.length)return; await applyChanges(_allSVisible[0].bookName, _allSVisible.map(s=>({uid:s.uid,enable:false}))); toastr.success('已关闭当前模式所有剧情'); loadDataAndRender(); });
 }
 
 function renderGlobalButtonsSummaries() {
   $('#wb-global-btns').html(`
     <button id='wb-summary-all-on' style='flex:1;background:${SWITCHER_CONFIG.colors.summaryOn};color:white;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;opacity:0.9;'>🎬 全部开启</button>
     <button id='wb-summary-all-off' style='flex:1;background:${SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:8px;border-radius:5px;cursor:pointer;font-weight:bold;opacity:0.9;'>⛔ 全部关闭</button>`);
-  $('#wb-summary-all-on').on('click', async () => { if(!currentData.summaries.length)return; await applyChanges(currentData.summaries[0].bookName, currentData.summaries.map(s=>({uid:s.uid,enable:true}))); toastr.success('已开启所有梗概'); loadDataAndRender(); });
-  $('#wb-summary-all-off').on('click', async () => { if(!currentData.summaries.length)return; await applyChanges(currentData.summaries[0].bookName, currentData.summaries.map(s=>({uid:s.uid,enable:false}))); toastr.success('已关闭所有梗概'); loadDataAndRender(); });
+  const _allSumMode = SWITCHER_STATE.simpTradMode;
+  const _allSumVisible = currentData.summaries.filter(s => matchSimpTradMode(s.simpTrad, _allSumMode));
+  $('#wb-summary-all-on').on('click', async () => { if(!_allSumVisible.length)return; await applyChanges(_allSumVisible[0].bookName, _allSumVisible.map(s=>({uid:s.uid,enable:true}))); toastr.success('已开启当前模式所有梗概'); loadDataAndRender(); });
+  $('#wb-summary-all-off').on('click', async () => { if(!_allSumVisible.length)return; await applyChanges(_allSumVisible[0].bookName, _allSumVisible.map(s=>({uid:s.uid,enable:false}))); toastr.success('已关闭当前模式所有梗概'); loadDataAndRender(); });
 }
 
 async function renderListStories() {
   const list = $('#wb-switcher-list').empty();
-  if (currentData.stories.length === 0) return list.html(`<div style='text-align:center;color:#718096;padding:20px;'>未找到剧情条目(需包含✍️)</div>`);
+  const _smode = SWITCHER_STATE.simpTradMode;
+  const visibleStories = currentData.stories.filter(s => matchSimpTradMode(s.simpTrad, _smode));
+  if (visibleStories.length === 0) return list.html(`<div style='text-align:center;color:#718096;padding:20px;'>未找到当前模式下的剧情条目(需包含✍️)</div>`);
   
   const scanText = await getFullContextVar();
+  const displayText = await getStoryDisplayText();
 
-  currentData.stories.forEach((item, idx) => {
+  visibleStories.forEach((item, idx) => {
     const type = item.strategy?.type || 'selective';
-    const isConstant = type === 'constant';
-    const isActive = checkStoryActivation(item, scanText);
-    
-    const strategyBtnText = isConstant ? '🔵常驻' : '🟢触';
-    const strategyBtnColor = isConstant ? 'rgba(66,153,225,0.2)' : 'rgba(72,187,120,0.2)';
-    const strategyBtnTextColor = isConstant ? '#63b3ed' : '#9ae6b4';
+    const stState = getStoryActivationState(item, scanText, displayText);
+    const isActive = stState.active;
+    // 策略按钮：手动蓝灯=🔵常驻，自动蓝灯=🔷自动，绿灯=🟢触
+    const strategyBtnText = stState.mode === 'manualBlue' ? '🔵常驻' : (stState.mode === 'autoBlue' ? '🔷自动' : '🟢触');
+    const strategyBtnColor = stState.mode === 'manualBlue' ? 'rgba(66,153,225,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(72,187,120,0.2)');
+    const strategyBtnTextColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#9ae6b4');
+    const activeIcon = stState.mode === 'manualBlue' ? '🔵 ' : (stState.mode === 'autoBlue' ? '🔷 ' : '⚡️ ');
     
     let displayName = item.name.replace('✍️','').trim();
     let nameStyle = 'font-weight:bold;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px;';
@@ -1851,7 +2018,7 @@ async function renderListStories() {
     if (!item.enabled) {
         nameStyle += 'color:#718096;'; 
     } else if (isActive) {
-        displayName = '⚡️ ' + displayName;
+        displayName = activeIcon + displayName;
         nameStyle += 'color:white;'; 
     } else {
         nameStyle += 'color:#a0aec0;opacity:0.6;'; 
@@ -1860,13 +2027,15 @@ async function renderListStories() {
     list.append(`<div class='wb-item-row' data-name='${item.name}' style='display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;border-left:3px solid transparent;'>
       <div style='${nameStyle}'>${displayName}</div>
       <div style='display:flex;align-items:center;gap:5px;'>
-        <button class='wb-btn-story-strategy' data-idx='${idx}' style='background:${strategyBtnColor};color:${strategyBtnTextColor};border:1px solid ${strategyBtnTextColor};padding:4px 8px;border-radius:3px;cursor:pointer;font-size:11px;transition:0.2s;'>${strategyBtnText}</button>
-        <button class='wb-btn-story-toggle' data-idx='${idx}' style='width:50px;background:${item.enabled?SWITCHER_CONFIG.colors.storyOn:SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:12px;transition:0.2s;'>${item.enabled?'ON':'OFF'}</button>
+        <button class='wb-btn-story-strategy' data-uid='${item.uid}' style='background:${strategyBtnColor};color:${strategyBtnTextColor};border:1px solid ${strategyBtnTextColor};padding:4px 8px;border-radius:3px;cursor:pointer;font-size:11px;transition:0.2s;'>${strategyBtnText}</button>
+        <button class='wb-btn-story-toggle' data-uid='${item.uid}' style='width:50px;background:${item.enabled?SWITCHER_CONFIG.colors.storyOn:SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:12px;transition:0.2s;'>${item.enabled?'ON':'OFF'}</button>
       </div></div>`);
   });
   
   $('.wb-btn-story-toggle').on('click', async function() { 
-      const i=currentData.stories[$(this).data('idx')]; 
+      const uid = $(this).data('uid'); 
+      const i = currentData.stories.find(s => s.uid === uid); 
+      if (!i) return; 
       const s=!i.enabled; 
       await applyChanges(i.bookName, [{uid:i.uid,enable:s}]); 
       i.enabled=s; 
@@ -1874,7 +2043,9 @@ async function renderListStories() {
   });
 
   $('.wb-btn-story-strategy').on('click', async function() {
-      const i = currentData.stories[$(this).data('idx')];
+      const uid = $(this).data('uid');
+      const i = currentData.stories.find(s => s.uid === uid);
+      if (!i) return;
       await toggleStrategy(i.bookName, i.uid);
   });
 }
@@ -1882,18 +2053,21 @@ async function renderListStories() {
 // [NEW] 梗概列表渲染 (复制自 Story 逻辑)
 async function renderListSummaries() {
     const list = $('#wb-switcher-list').empty();
-    if (currentData.summaries.length === 0) return list.html(`<div style='text-align:center;color:#718096;padding:20px;'>未找到梗概条目(需包含🎬️)</div>`);
+    const _smode2 = SWITCHER_STATE.simpTradMode;
+    const visibleSummaries = currentData.summaries.filter(s => matchSimpTradMode(s.simpTrad, _smode2));
+    if (visibleSummaries.length === 0) return list.html(`<div style='text-align:center;color:#718096;padding:20px;'>未找到当前模式下的梗概条目(需包含🎬️)</div>`);
     
     const scanText = await getFullContextVar();
+    const displayText = await getStoryDisplayText();
   
-    currentData.summaries.forEach((item, idx) => {
+    visibleSummaries.forEach((item, idx) => {
       const type = item.strategy?.type || 'selective';
-      const isConstant = type === 'constant';
-      const isActive = checkStoryActivation(item, scanText);
-      
-      const strategyBtnText = isConstant ? '🔵常驻' : '🟢触';
-      const strategyBtnColor = isConstant ? 'rgba(66,153,225,0.2)' : 'rgba(72,187,120,0.2)';
-      const strategyBtnTextColor = isConstant ? '#63b3ed' : '#9ae6b4';
+      const stState = getStoryActivationState(item, scanText, displayText);
+      const isActive = stState.active;
+      const strategyBtnText = stState.mode === 'manualBlue' ? '🔵常驻' : (stState.mode === 'autoBlue' ? '🔷自动' : '🟢触');
+      const strategyBtnColor = stState.mode === 'manualBlue' ? 'rgba(66,153,225,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(72,187,120,0.2)');
+      const strategyBtnTextColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#9ae6b4');
+      const activeIcon = stState.mode === 'manualBlue' ? '🔵 ' : (stState.mode === 'autoBlue' ? '🔷 ' : '⚡️ ');
       
       let displayName = item.name.replace('🎬️','').trim();
       let nameStyle = 'font-weight:bold;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:10px;';
@@ -1901,7 +2075,7 @@ async function renderListSummaries() {
       if (!item.enabled) {
           nameStyle += 'color:#718096;'; 
       } else if (isActive) {
-          displayName = '⚡️ ' + displayName;
+          displayName = activeIcon + displayName;
           nameStyle += 'color:#d6bcfa;'; // 紫色高亮
       } else {
           nameStyle += 'color:#a0aec0;opacity:0.6;'; 
@@ -1910,13 +2084,15 @@ async function renderListSummaries() {
       list.append(`<div class='wb-item-row' data-name='${item.name}' style='display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(255,255,255,0.05);border-radius:6px;border-left:3px solid transparent;'>
         <div style='${nameStyle}'>${displayName}</div>
         <div style='display:flex;align-items:center;gap:5px;'>
-          <button class='wb-btn-summary-strategy' data-idx='${idx}' style='background:${strategyBtnColor};color:${strategyBtnTextColor};border:1px solid ${strategyBtnTextColor};padding:4px 8px;border-radius:3px;cursor:pointer;font-size:11px;transition:0.2s;'>${strategyBtnText}</button>
-          <button class='wb-btn-summary-toggle' data-idx='${idx}' style='width:50px;background:${item.enabled?SWITCHER_CONFIG.colors.summaryOn:SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:12px;transition:0.2s;'>${item.enabled?'ON':'OFF'}</button>
+          <button class='wb-btn-summary-strategy' data-uid='${item.uid}' style='background:${strategyBtnColor};color:${strategyBtnTextColor};border:1px solid ${strategyBtnTextColor};padding:4px 8px;border-radius:3px;cursor:pointer;font-size:11px;transition:0.2s;'>${strategyBtnText}</button>
+          <button class='wb-btn-summary-toggle' data-uid='${item.uid}' style='width:50px;background:${item.enabled?SWITCHER_CONFIG.colors.summaryOn:SWITCHER_CONFIG.colors.inactive};color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;font-size:12px;transition:0.2s;'>${item.enabled?'ON':'OFF'}</button>
         </div></div>`);
     });
     
     $('.wb-btn-summary-toggle').on('click', async function() { 
-        const i=currentData.summaries[$(this).data('idx')]; 
+        const uid = $(this).data('uid'); 
+        const i = currentData.summaries.find(s => s.uid === uid); 
+        if (!i) return; 
         const s=!i.enabled; 
         await applyChanges(i.bookName, [{uid:i.uid,enable:s}]); 
         i.enabled=s; 
@@ -1924,7 +2100,9 @@ async function renderListSummaries() {
     });
   
     $('.wb-btn-summary-strategy').on('click', async function() {
-        const i = currentData.summaries[$(this).data('idx')];
+        const uid = $(this).data('uid');
+        const i = currentData.summaries.find(s => s.uid === uid);
+        if (!i) return;
         await toggleStrategy(i.bookName, i.uid);
     });
   }
