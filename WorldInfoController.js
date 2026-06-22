@@ -26,7 +26,41 @@ const SWITCHER_CONFIG = {
   }
 };
 
-let SWITCHER_STATE = { autoMode: true, floatVisible: true, floatPos: { top: '80px', left: '20px' }, simpTradMode: 'simp', floatSizeMode: 'small' };
+let SWITCHER_STATE = { autoMode: true, floatVisible: true, floatPos: { top: '80px', left: '20px' }, simpTradMode: 'simp', floatSizeMode: 'small', uiDarkMode: true };
+
+// 深浅色模式（存全局变量 wuwa_wb_ui_dark，跨会话持久）
+async function loadWbUiDarkMode() {
+    try {
+        const g = await getVariables({ type: 'global' });
+        if (g && g.wuwa_wb_ui_dark !== undefined) {
+            SWITCHER_STATE.uiDarkMode = g.wuwa_wb_ui_dark === true;
+        }
+    } catch(e) {}
+}
+async function saveWbUiDarkMode() {
+    try {
+        await updateVariablesWith(v => { _.set(v, 'wuwa_wb_ui_dark', SWITCHER_STATE.uiDarkMode); return v; }, { type: 'global' });
+    } catch(e) {}
+}
+
+// 悬浮窗配色（根据 uiDarkMode 返回深/浅色对象）
+function getFloatColors() {
+    return SWITCHER_STATE.uiDarkMode ? {
+        bg: 'rgba(15,20,30,0.4)', border: 'rgba(56,189,248,0.3)', text: '#e2e8f0',
+        headBg: 'rgba(15,20,30,0.4)', headText: '#e2e8f0', headBorder: 'rgba(255,255,255,0.08)',
+        secTitle: '#94a3b8', secBorder: 'rgba(56,189,248,0.3)',
+        itemProBg: 'rgba(255,255,255,0.08)', itemProText: '#e2e8f0',
+        itemBg: 'rgba(255,255,255,0.06)', itemText: '#cbd5e1',
+        more: '#94a3b8', toggle: '#38bdf8', empty: '#64748b'
+    } : {
+        bg: 'rgba(245,247,250,0.5)', border: 'rgba(56,189,248,0.5)', text: '#1e293b',
+        headBg: 'rgba(245,247,250,0.5)', headText: '#1e293b', headBorder: 'rgba(15,23,42,0.12)',
+        secTitle: '#475569', secBorder: 'rgba(2,132,199,0.5)',
+        itemProBg: 'rgba(15,23,42,0.08)', itemProText: '#1e293b',
+        itemBg: 'rgba(15,23,42,0.06)', itemText: '#334155',
+        more: '#64748b', toggle: '#0284c7', empty: '#94a3b8'
+    };
+}
 
 // ==================== 核心工具 ====================
 
@@ -1362,14 +1396,17 @@ function createFloatingWindow() {
   const closeFs = Math.round(12 * sc);
   const listPad = Math.round(3 * sc);
   const listMaxH = Math.round(180 * sc);
+  // 配色：根据 uiDarkMode 选深/浅色
+  const FC = getFloatColors();
   
   const html = `
-    <div id='wb-float-monitor' style='position:fixed;top:${SWITCHER_STATE.floatPos.top};left:${SWITCHER_STATE.floatPos.left};width:${floatW}px;background:rgba(15,20,30,0.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(56,189,248,0.3);border-radius:6px;z-index:10001;display:${SWITCHER_STATE.floatVisible ? 'block' : 'none'};color:#e2e8f0;font-family:sans-serif;font-size:${floatFs}px;box-shadow:0 4px 10px rgba(0,0,0,0.5);overflow:hidden;user-select:none;cursor:move;touch-action:none;'>
-      <div id='wb-float-header' style='background:rgba(15,20,30,0.4);background-image:linear-gradient(90deg,rgba(56,189,248,0.15),transparent);padding:${headPad};font-weight:bold;color:#e2e8f0;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;'>
-        <div style="display:flex;align-items:center;gap:5px;pointer-events:none;">
+    <div id='wb-float-monitor' style='position:fixed;top:${SWITCHER_STATE.floatPos.top};left:${SWITCHER_STATE.floatPos.left};width:${floatW}px;background:${FC.bg};backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid ${FC.border};border-radius:6px;z-index:10001;display:${SWITCHER_STATE.floatVisible ? 'block' : 'none'};color:${FC.text};font-family:sans-serif;font-size:${floatFs}px;box-shadow:0 4px 10px rgba(0,0,0,0.5);overflow:hidden;user-select:none;cursor:move;touch-action:none;'>
+      <div id='wb-float-header' style='background:${FC.headBg};background-image:linear-gradient(90deg,rgba(56,189,248,0.15),transparent);padding:${headPad};font-weight:bold;color:${FC.headText};border-bottom:1px solid ${FC.headBorder};display:flex;justify-content:space-between;align-items:center;'>
+        <div style="display:flex;align-items:center;gap:3px;pointer-events:none;font-size:${Math.round(9*sc)}px;">
             <span>📡 实时监控</span>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;">
+        <div style="display:flex;gap:6px;align-items:center;">
+            <span id='wb-float-dark-toggle' style='cursor:pointer;opacity:0.85;font-size:${Math.round(10*sc)}px;transition:0.2s;' title='${SWITCHER_STATE.uiDarkMode ? '切换为浅色模式' : '切换为深色模式'}'>${SWITCHER_STATE.uiDarkMode ? '🌙' : '☀️'}</span>
             <span id='wb-float-size-toggle' style='cursor:pointer;opacity:0.85;font-size:${autoFs}px;transition:0.2s;' title='${sizeTitle}'>${sizeIcon}</span>
             <span id='wb-float-close' style='cursor:pointer;opacity:0.85;font-size:${closeFs}px;transition:0.2s;' title='关闭'>✕</span>
         </div>
@@ -1384,7 +1421,7 @@ function createFloatingWindow() {
 
   if (typeof $floatWin.draggable === 'function') {
       $floatWin.draggable({
-          cancel: '#wb-float-size-toggle, #wb-float-close, .wb-float-toggle-expand',
+          cancel: '#wb-float-size-toggle, #wb-float-close, #wb-float-dark-toggle, .wb-float-toggle-expand',
           containment: 'window',
           start: function() { isDragging = true; },
           stop: function(event, ui) {
@@ -1395,6 +1432,14 @@ function createFloatingWindow() {
       });
   }
 
+  $('#wb-float-dark-toggle').on('click', async function(e) {
+      if (isDragging) return;
+      e.stopPropagation(); e.preventDefault(); 
+      SWITCHER_STATE.uiDarkMode = !SWITCHER_STATE.uiDarkMode;
+      await saveWbUiDarkMode();
+      createFloatingWindow();
+      if (typeof toastr !== 'undefined') toastr.info(SWITCHER_STATE.uiDarkMode ? '已切换为深色模式' : '已切换为浅色模式');
+  });
   $('#wb-float-size-toggle').on('click', function(e) {
       if (isDragging) return;
       e.stopPropagation(); e.preventDefault(); 
@@ -1447,51 +1492,52 @@ async function refreshFloatingWindowContent() {
     const fs9 = Math.round(9 * sc);
     const fs8 = Math.round(8 * sc);
     const pad13 = `${Math.round(1*sc)}px ${Math.round(3*sc)}px`;
+    const FC = getFloatColors();
     
     // Pro 显示逻辑：默认显示4个，可展开显示最多8个
     if (proList.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;'>🟢 Pro(${proList.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:${FC.secTitle};font-weight:bold;border-bottom:1px dashed ${FC.secBorder};padding-bottom:1px;margin-bottom:1px;'>🟢 Pro(${proList.length})</div>`);
         const COLLAPSED_MAX = 4;
         const EXPANDED_MAX = 8;
         const maxShow = floatProExpanded ? EXPANDED_MAX : COLLAPSED_MAX;
         const showList = proList.slice(0, maxShow);
-        showList.forEach(p => listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.08);border-left:2px solid #48bb78;border-radius:2px;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${p.displayName}</div>`));
+        showList.forEach(p => listEl.append(`<div style='padding:${pad13};background:${FC.itemProBg};border-left:2px solid #48bb78;border-radius:2px;color:${FC.itemProText};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${p.displayName}</div>`));
         
         if (proList.length > maxShow) {
-            listEl.append(`<div style='padding:${pad13};color:#94a3b8;font-size:${fs8}px;font-style:italic;'>+${proList.length - maxShow}</div>`);
+            listEl.append(`<div style='padding:${pad13};color:${FC.more};font-size:${fs8}px;font-style:italic;'>+${proList.length - maxShow}</div>`);
         }
         
         if (proList.length > COLLAPSED_MAX) {
             const toggleText = floatProExpanded ? '收起 ▲' : '展开 ▼';
-            listEl.append(`<div class='wb-float-toggle-expand' style='padding:${pad13};color:#38bdf8;font-size:${fs8}px;text-align:center;cursor:pointer;user-select:none;'>${toggleText}</div>`);
+            listEl.append(`<div class='wb-float-toggle-expand' style='padding:${pad13};color:${FC.toggle};font-size:${fs8}px;text-align:center;cursor:pointer;user-select:none;'>${toggleText}</div>`);
         }
     } else {
-        listEl.append(`<div style='font-size:${fs9}px;color:#64748b;text-align:center;padding:3px;'>无Pro</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:${FC.empty};text-align:center;padding:3px;'>无Pro</div>`);
     }
 
     // 剧情显示逻辑
     if (activeStories.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>✍️ 剧情(${activeStories.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:${FC.secTitle};font-weight:bold;border-bottom:1px dashed ${FC.secBorder};padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>✍️ 剧情(${activeStories.length})</div>`);
         activeStories.forEach(s => {
             const stState = getStoryActivationState(s, scanText, displayText);
             const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#ecc94b');
             const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(236,201,75,0.2)');
             const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
             const borderColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#ecc94b');
-            listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.06);border-left:2px solid ${borderColor};border-radius:2px;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('✍️','').trim()}</div>`);
+            listEl.append(`<div style='padding:${pad13};background:${FC.itemBg};border-left:2px solid ${borderColor};border-radius:2px;color:${FC.itemText};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('✍️','').trim()}</div>`);
         });
     }
     
     // 梗概显示逻辑
     if (activeSummaries.length > 0) {
-        listEl.append(`<div style='font-size:${fs9}px;color:#94a3b8;font-weight:bold;border-bottom:1px dashed rgba(56,189,248,0.3);padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>🎬 梗概(${activeSummaries.length})</div>`);
+        listEl.append(`<div style='font-size:${fs9}px;color:${FC.secTitle};font-weight:bold;border-bottom:1px dashed ${FC.secBorder};padding-bottom:1px;margin-bottom:1px;margin-top:3px;'>🎬 梗概(${activeSummaries.length})</div>`);
         activeSummaries.forEach(s => {
             const stState = getStoryActivationState(s, scanText, displayText);
             const color = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#d6bcfa');
             const bg = stState.mode === 'manualBlue' ? 'rgba(99,179,237,0.2)' : (stState.mode === 'autoBlue' ? 'rgba(79,209,224,0.2)' : 'rgba(159,122,234,0.2)');
             const icon = stState.mode === 'manualBlue' ? '🔵' : (stState.mode === 'autoBlue' ? '🔷' : '⚡');
             const sumBorderColor = stState.mode === 'manualBlue' ? '#63b3ed' : (stState.mode === 'autoBlue' ? '#4fd1e0' : '#9f7aea');
-            listEl.append(`<div style='padding:${pad13};background:rgba(255,255,255,0.06);border-left:2px solid ${sumBorderColor};border-radius:2px;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('🎬️','').trim()}</div>`);
+            listEl.append(`<div style='padding:${pad13};background:${FC.itemBg};border-left:2px solid ${sumBorderColor};border-radius:2px;color:${FC.itemText};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:1px;font-size:${fs9}px;'>${icon}${s.name.replace('🎬️','').trim()}</div>`);
         });
     }
 
@@ -1802,8 +1848,8 @@ function renderListChars() {
     let virginBtnHtml = '';
     if (item.virginModifiable) {
         const vColor = item.isVirgin ? SWITCHER_CONFIG.colors.virgin : SWITCHER_CONFIG.colors.nonVirgin;
-        const vText = item.isVirgin ? '🌸 处女' : '👠 非处女';
-        virginBtnHtml = `<button class='wb-btn-virgin' data-idx='${idx}' style='background:${vColor};color:white;border:none;padding:5px 8px;border-radius:3px;cursor:pointer;font-size:11px;margin-right:5px;min-width:60px;font-weight:bold;'>${vText}</button>`;
+        const vText = item.isVirgin ? '🌸' : '👠';
+        virginBtnHtml = `<button class='wb-btn-virgin' data-idx='${idx}' style='background:${vColor};color:white;border:none;padding:5px 6px;border-radius:3px;cursor:pointer;font-size:12px;margin-right:5px;font-weight:bold;' title='${item.isVirgin ? '处女' : '非处女'}'>${vText}</button>`;
     }
 
     // [新增] 动态生成置顶星标图标
@@ -2114,6 +2160,7 @@ function loadSettings() { try { const s = JSON.parse(localStorage.getItem(SWITCH
 
 $(() => {
   loadSettings();
+  loadWbUiDarkMode().then(() => createFloatingWindow());
   if (typeof appendInexistentScriptButtons === 'function') {
     appendInexistentScriptButtons([{ name: SWITCHER_CONFIG.buttonName, visible: true }]);
     
@@ -2126,8 +2173,6 @@ $(() => {
         }
     });
   }
-  
-  createFloatingWindow();
   
   // 启动 1s 心跳循环
   clearInterval(masterLoopTimer);

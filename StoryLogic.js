@@ -409,6 +409,23 @@ function syncInjections(data) {
 let UI_SIZE_MODE = 'small';        // 'small' | 'large' (large = 1.5x)
 let UI_POS = { top: '100px', right: '20px' };  // 悬浮窗位置状态（拖动后持久化）
 let UI_EXTRA_EXPANDED = false;     // 额外信息栏展开状态
+let UI_DARK_MODE = true;          // 深色/浅色模式 (true=深色 / false=浅色)，存全局变量 wuwa_story_ui_dark
+
+// 读取深浅色模式（global 变量，跨会话持久）
+async function loadUiDarkMode() {
+    try {
+        const g = await getVariables({ type: 'global' });
+        if (g && g.wuwa_story_ui_dark !== undefined) {
+            UI_DARK_MODE = g.wuwa_story_ui_dark === true;
+        }
+    } catch(e) {}
+}
+// 写入深浅色模式
+async function saveUiDarkMode() {
+    try {
+        await updateVariablesWith(v => { _.set(v, 'wuwa_story_ui_dark', UI_DARK_MODE); return v; }, { type: 'global' });
+    } catch(e) {}
+}
 
 const UI_ID = 'wuwa-story-ui';
 
@@ -419,16 +436,42 @@ const UI_ID = 'wuwa-story-ui';
 // 根据缩放因子生成样式；sc=1 小模式(170px), sc=1.5 大模式(255px)
 // 设计参照 StoryUI_Draft.html：简约毛玻璃风（半透明+backdrop-blur，无渐变拟物）
 function buildUiStyles(sc) {
+    // 配色：根据 UI_DARK_MODE 选深/浅色
+    const C = UI_DARK_MODE ? {
+        bg: 'rgba(13, 17, 23, 0.55)', border: 'rgba(56, 139, 253, 0.18)', text: '#c9d1d9',
+        title: '#58a6ff', storyTag: '#58a6ff', storyName: '#f0cc5f',
+        boxBg: 'rgba(56, 139, 253, 0.06)', boxBorder: 'rgba(88, 166, 255, 0.4)', tagBg: 'rgba(88,166,255,0.12)',
+        btnBg: 'rgba(88, 166, 255, 0.09)', btnBorder: 'rgba(88, 166, 255, 0.14)', btnHoverBg: 'rgba(88, 166, 255, 0.2)', btnHoverBorder: 'rgba(88, 166, 255, 0.35)', btnHoverText: '#fff',
+        dangerText: '#ff8b82', dangerBg: 'rgba(255, 123, 114, 0.1)', dangerBorder: 'rgba(255, 123, 114, 0.15)', dangerHoverBg: 'rgba(255, 123, 114, 0.2)', dangerHoverText: '#ffb4ad',
+        lockedBg: 'rgba(63, 185, 80, 0.1)', lockedBorder: 'rgba(63, 185, 80, 0.2)', lockedText: '#7ee787',
+        foldText: '#9aa4b2', foldHover: '#58a6ff', foldHoverBg: 'rgba(56,139,253,0.05)',
+        cellBg: 'rgba(255, 255, 255, 0.05)', cellK: '#9aa4b2',
+        valY: '#f0cc5f', valG: '#7ee787', valO: '#ffa657', valR: '#ff7b72', valD: '#9aa4b2',
+        selectBg: 'rgba(13,17,23,0.7)', selectBorder: 'rgba(139,148,158,0.2)', labelText: '#9aa4b2',
+        headBg: 'rgba(255, 255, 255, 0.03)'
+    } : {
+        bg: 'rgba(245, 247, 250, 0.55)', border: 'rgba(56, 139, 253, 0.4)', text: '#1e293b',
+        title: '#0284c7', storyTag: '#0284c7', storyName: '#b45309',
+        boxBg: 'rgba(56, 139, 253, 0.1)', boxBorder: 'rgba(2, 132, 199, 0.5)', tagBg: 'rgba(2,132,199,0.15)',
+        btnBg: 'rgba(56, 139, 253, 0.12)', btnBorder: 'rgba(56, 139, 253, 0.3)', btnHoverBg: 'rgba(56, 139, 253, 0.25)', btnHoverBorder: 'rgba(56, 139, 253, 0.5)', btnHoverText: '#0c4a6e',
+        dangerText: '#b91c1c', dangerBg: 'rgba(220, 38, 38, 0.1)', dangerBorder: 'rgba(220, 38, 38, 0.25)', dangerHoverBg: 'rgba(220, 38, 38, 0.2)', dangerHoverText: '#7f1d1d',
+        lockedBg: 'rgba(5, 150, 105, 0.12)', lockedBorder: 'rgba(5, 150, 105, 0.3)', lockedText: '#047857',
+        foldText: '#475569', foldHover: '#0284c7', foldHoverBg: 'rgba(56,139,253,0.1)',
+        cellBg: 'rgba(15, 23, 42, 0.06)', cellK: '#475569',
+        valY: '#b45309', valG: '#047857', valO: '#c2410c', valR: '#b91c1c', valD: '#475569',
+        selectBg: 'rgba(255,255,255,0.85)', selectBorder: 'rgba(15,23,42,0.2)', labelText: '#475569',
+        headBg: 'rgba(255, 255, 255, 0.4)'
+    };
     return `
 #${UI_ID} {
     position: fixed; width:${Math.round(170*sc)}px;
-    background: rgba(13, 17, 23, 0.55);
-    backdrop-filter: blur(12px) saturate(1.2);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
-    border: 1px solid rgba(56, 139, 253, 0.18);
+    background: ${C.bg};
+    backdrop-filter: blur(8px) saturate(1.2);
+    -webkit-backdrop-filter: blur(8px) saturate(1.2);
+    border: 1px solid ${C.border};
     border-radius: ${Math.round(10*sc)}px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-    color: #c9d1d9; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    color: ${C.text}; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
     font-size: ${Math.round(11*sc)}px; line-height: 1.4;
     overflow: hidden; cursor: move; user-select: none; z-index: 10000;
     display: flex; flex-direction: column;
@@ -436,11 +479,11 @@ function buildUiStyles(sc) {
 #${UI_ID} .head {
     display: flex; align-items: center; justify-content: space-between;
     padding: ${Math.round(4*sc)}px ${Math.round(8*sc)}px;
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(56, 139, 253, 0.18);
+    background: ${C.headBg};
+    border-bottom: 1px solid ${C.border};
 }
 #${UI_ID} .head .title {
-    font-size: ${Math.round(10*sc)}px; font-weight: 600; color: #58a6ff; letter-spacing: 0.5px;
+    font-size: ${Math.round(10*sc)}px; font-weight: 600; color: ${C.title}; letter-spacing: 0.5px;
 }
 #${UI_ID} .head .acts { display: flex; gap: ${Math.round(6*sc)}px; align-items: center; }
 #${UI_ID} .head .acts span {
@@ -452,15 +495,15 @@ function buildUiStyles(sc) {
 #${UI_ID} .body { padding: ${Math.round(6*sc)}px ${Math.round(8*sc)}px; display: flex; flex-direction: column; gap: ${Math.round(5*sc)}px; }
 
 #${UI_ID} .story-box {
-    background: rgba(56, 139, 253, 0.06);
-    border-left: ${Math.round(1.5*sc)}px solid rgba(88, 166, 255, 0.4);
+    background: ${C.boxBg};
+    border-left: ${Math.round(1.5*sc)}px solid ${C.boxBorder};
     border-radius: 0 ${Math.round(4*sc)}px ${Math.round(4*sc)}px 0;
     padding: ${Math.round(3*sc)}px ${Math.round(6*sc)}px;
     display: flex; align-items: baseline; gap: ${Math.round(4*sc)}px;
 }
-#${UI_ID} .story-box .tag {     font-size: ${Math.round(8*sc)}px; color: #58a6ff; flex-shrink: 0; font-weight: 600;     background: rgba(88,166,255,0.12); padding: ${Math.round(1*sc)}px ${Math.round(4*sc)}px; border-radius: ${Math.round(3*sc)}px; }
+#${UI_ID} .story-box .tag {     font-size: ${Math.round(8*sc)}px; color: ${C.storyTag}; flex-shrink: 0; font-weight: 600;     background: ${C.tagBg}; padding: ${Math.round(1*sc)}px ${Math.round(4*sc)}px; border-radius: ${Math.round(3*sc)}px; }
 #${UI_ID} .story-box .name {
-    font-size: ${Math.round(10*sc)}px; color: #f0cc5f; font-weight: 600;
+    font-size: ${Math.round(10*sc)}px; color: ${C.storyName}; font-weight: 600;
     word-break: break-all; line-height: 1.25;
 }
 
@@ -468,9 +511,9 @@ function buildUiStyles(sc) {
 #${UI_ID} .btns .row { display: flex; gap: ${Math.round(3*sc)}px; }
 #${UI_ID} .btn {
     flex: 1; min-width: 0;
-    background: rgba(88, 166, 255, 0.09);
-    border: 1px solid rgba(88, 166, 255, 0.14);
-    color: #c9d1d9; border-radius: ${Math.round(6*sc)}px; cursor: pointer;
+    background: ${C.btnBg};
+    border: 1px solid ${C.btnBorder};
+    color: ${C.text}; border-radius: ${Math.round(6*sc)}px; cursor: pointer;
     font-size: ${Math.round(10*sc)}px; font-weight: 500; line-height: 1.2;
     padding: ${Math.round(4*sc)}px ${Math.round(4*sc)}px;
     white-space: normal; word-break: break-word;
@@ -482,22 +525,22 @@ function buildUiStyles(sc) {
 #${UI_ID} .btn .bi { flex-shrink: 0; font-size: ${Math.round(11*sc)}px; line-height: 1; opacity: 0.75; }
 #${UI_ID} .btn .bt { flex: 1; text-align: center; line-height: 1.2; }
 #${UI_ID} .btn:hover {
-    background: rgba(88, 166, 255, 0.2); border-color: rgba(88, 166, 255, 0.35); color: #fff;
+    background: ${C.btnHoverBg}; border-color: ${C.btnHoverBorder}; color: ${C.btnHoverText};
 }
-#${UI_ID} .btn.danger { color: #ff8b82; background: rgba(255, 123, 114, 0.1); border-color: rgba(255, 123, 114, 0.15); }
-#${UI_ID} .btn.danger:hover { background: rgba(255, 123, 114, 0.2); color: #ffb4ad; }
-#${UI_ID} .btn.locked { background: rgba(63, 185, 80, 0.1); border-color: rgba(63, 185, 80, 0.2); color: #7ee787; }
+#${UI_ID} .btn.danger { color: ${C.dangerText}; background: ${C.dangerBg}; border-color: ${C.dangerBorder}; }
+#${UI_ID} .btn.danger:hover { background: ${C.dangerHoverBg}; color: ${C.dangerHoverText}; }
+#${UI_ID} .btn.locked { background: ${C.lockedBg}; border-color: ${C.lockedBorder}; color: ${C.lockedText}; }
 #${UI_ID} .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 #${UI_ID} .btn-full { width: 100%; }
 
 #${UI_ID} .fold {
     display: flex; align-items: center; justify-content: center; gap: ${Math.round(4*sc)}px;
     padding: ${Math.round(3*sc)}px; margin-top: ${Math.round(1*sc)}px;
-    border-top: 1px solid rgba(56, 139, 253, 0.18);
-    color: #6e7681; font-size: ${Math.round(9*sc)}px; cursor: pointer;
+    border-top: 1px solid ${C.border};
+    color: ${C.foldText}; font-size: ${Math.round(9*sc)}px; cursor: pointer;
     transition: color 0.15s, background 0.15s;
 }
-#${UI_ID} .fold:hover { color: #58a6ff; background: rgba(56,139,253,0.05); }
+#${UI_ID} .fold:hover { color: ${C.foldHover}; background: ${C.foldHoverBg}; }
 #${UI_ID} .fold .arrow { transition: transform 0.2s; }
 #${UI_ID} .fold.open .arrow { transform: rotate(180deg); }
 #${UI_ID} .extra { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
@@ -505,31 +548,32 @@ function buildUiStyles(sc) {
 #${UI_ID} .extra-inner {
     padding: ${Math.round(5*sc)}px ${Math.round(8*sc)}px ${Math.round(6*sc)}px;
     display: flex; flex-direction: column; gap: ${Math.round(4*sc)}px;
-    border-top: 1px solid rgba(56, 139, 253, 0.18);
+    border-top: 1px solid ${C.border};
 }
 #${UI_ID} .grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${Math.round(3*sc)}px; }
 #${UI_ID} .cell {
-    background: rgba(255, 255, 255, 0.05); border-radius: ${Math.round(6*sc)}px;
+    background: ${C.cellBg}; border-radius: ${Math.round(6*sc)}px;
     padding: ${Math.round(3*sc)}px ${Math.round(5*sc)}px;
     display: flex; flex-direction: column; gap: ${Math.round(1*sc)}px;
 }
-#${UI_ID} .cell .k { font-size: ${Math.round(8*sc)}px; color: #6e7681; }
+#${UI_ID} .cell .k { font-size: ${Math.round(8*sc)}px; color: ${C.cellK}; }
 #${UI_ID} .cell .v { font-size: ${Math.round(10*sc)}px; font-weight: 600; }
-#${UI_ID} .cell .v.y { color: #f0cc5f; } #${UI_ID} .cell .v.g { color: #7ee787; }
-#${UI_ID} .cell .v.o { color: #ffa657; } #${UI_ID} .cell .v.r { color: #ff7b72; } #${UI_ID} .cell .v.d { color: #6e7681; }
+#${UI_ID} .cell .v.y { color: ${C.valY}; } #${UI_ID} .cell .v.g { color: ${C.valG}; }
+#${UI_ID} .cell .v.o { color: ${C.valO}; } #${UI_ID} .cell .v.r { color: ${C.valR}; } #${UI_ID} .cell .v.d { color: ${C.valD}; }
 #${UI_ID} .jump { display: flex; flex-direction: column; gap: ${Math.round(3*sc)}px; }
 #${UI_ID} .jump .pick { display: flex; gap: ${Math.round(3*sc)}px; align-items: center; }
 #${UI_ID} .jump select {
     flex: 1; min-width: 0;
-    background: rgba(13,17,23,0.7); border: 1px solid rgba(139,148,158,0.2);
-    color: #c9d1d9; font-size: ${Math.round(9*sc)}px; padding: ${Math.round(3*sc)}px ${Math.round(4*sc)}px;
+    background: ${C.selectBg}; border: 1px solid ${C.selectBorder};
+    color: ${C.text}; font-size: ${Math.round(9*sc)}px; padding: ${Math.round(3*sc)}px ${Math.round(4*sc)}px;
     border-radius: ${Math.round(4*sc)}px; cursor: pointer;
 }
+#${UI_ID} .jump select option { background: ${C.selectBg}; color: ${C.text}; }
 #${UI_ID} .jump label {
     display: flex; align-items: center; gap: ${Math.round(2*sc)}px;
-    font-size: ${Math.round(8*sc)}px; color: #6e7681; white-space: nowrap; cursor: pointer;
+    font-size: ${Math.round(8*sc)}px; color: ${C.labelText}; white-space: nowrap; cursor: pointer;
 }
-#${UI_ID} .jump label input { width: ${Math.round(10*sc)}px; height: ${Math.round(10*sc)}px; margin: 0; accent-color: #58a6ff; }
+#${UI_ID} .jump label input { width: ${Math.round(10*sc)}px; height: ${Math.round(10*sc)}px; margin: 0; accent-color: ${C.title}; }
 `;
 }
 
@@ -555,6 +599,7 @@ function createOrUpdateUI(data) {
             <div class="head">
                 <span class="title">📖 剧情控制台</span>
                 <span class="acts">
+                    <span id="btn-dark-toggle" title="${UI_DARK_MODE ? '切换为浅色模式' : '切换为深色模式'}">${UI_DARK_MODE ? '🌙' : '☀️'}</span>
                     <span id="btn-size-toggle" title="${sizeTitle}">${sizeIcon}</span>
                     <span id="btn-ui-close" title="关闭">✕</span>
                 </span>
@@ -595,7 +640,7 @@ function createOrUpdateUI(data) {
         if (typeof $el.draggable === 'function') {
             $el.draggable({
                 handle: '.head, .body, .fold, .extra',
-                cancel: '#btn-size-toggle, #btn-ui-close, .btn, select, input',
+                cancel: '#btn-size-toggle, #btn-ui-close, #btn-dark-toggle, .btn, select, input',
                 containment: 'window',
                 start: function() { isDragging = true; },
                 stop: function(event, ui) {
@@ -609,6 +654,19 @@ function createOrUpdateUI(data) {
             if (isDragging) return;
             e.stopPropagation(); e.preventDefault();
             $(`#${UI_ID}`).hide();
+        });
+        $('#btn-dark-toggle').on('click', async function(e) {
+            if (isDragging) return;
+            e.stopPropagation(); e.preventDefault();
+            UI_DARK_MODE = !UI_DARK_MODE;
+            await saveUiDarkMode();
+            // 销毁重建以应用新配色
+            $(`#${UI_ID}`).remove();
+            $(`#style_${UI_ID}`).remove();
+            createOrUpdateUI(_lastUiData);
+            if (typeof toastr !== 'undefined') {
+                toastr.info(UI_DARK_MODE ? '已切换为深色模式' : '已切换为浅色模式');
+            }
         });
         $('#btn-size-toggle').on('click', function(e) {
             if (isDragging) return;
@@ -897,6 +955,7 @@ $(async () => {
         const btnEvent = getButtonEvent(BTN_NAME);
         
         eventOn(btnEvent, async () => {
+            await loadUiDarkMode();
             const $ui = $(`#${UI_ID}`);
             if ($ui.length === 0) {
                 createOrUpdateUI(null); 
