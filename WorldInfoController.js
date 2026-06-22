@@ -1193,8 +1193,8 @@ let floatProExpanded = false;
 
 function createFloatingWindow() {
   $('#wb-float-monitor').remove();
-  const autoIcon = SWITCHER_STATE.autoMode ? '🔄' : '⏸️';
-  const autoTitle = SWITCHER_STATE.autoMode ? '自动模式: ON' : '自动模式: OFF';
+  const sizeIcon = SWITCHER_STATE.floatSizeMode === 'large' ? '📏' : '📐';
+  const sizeTitle = SWITCHER_STATE.floatSizeMode === 'large' ? '切换为小悬浮窗' : '切换为大悬浮窗 (1.5x)';
 
   // 🔤 大/小模式缩放因子（避免 zoom 导致拖拽坐标错乱）
   const sc = SWITCHER_STATE.floatSizeMode === 'large' ? 1.5 : 1;
@@ -1213,7 +1213,7 @@ function createFloatingWindow() {
             <span>📡 实时监控</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-            <span id='wb-float-auto-toggle' style='cursor:pointer;opacity:1;font-size:${autoFs}px;' title='${autoTitle}'>${autoIcon}</span>
+            <span id='wb-float-size-toggle' style='cursor:pointer;opacity:1;font-size:${autoFs}px;' title='${sizeTitle}'>${sizeIcon}</span>
             <span id='wb-float-close' style='cursor:pointer;opacity:0.8;font-size:${closeFs}px;' title='关闭'>✕</span>
         </div>
       </div>
@@ -1227,7 +1227,7 @@ function createFloatingWindow() {
 
   if (typeof $floatWin.draggable === 'function') {
       $floatWin.draggable({
-          cancel: '#wb-float-auto-toggle, #wb-float-close, .wb-float-toggle-expand',
+          cancel: '#wb-float-size-toggle, #wb-float-close, .wb-float-toggle-expand',
           containment: 'window',
           start: function() { isDragging = true; },
           stop: function(event, ui) {
@@ -1238,20 +1238,23 @@ function createFloatingWindow() {
       });
   }
 
-  $('#wb-float-auto-toggle').on('click', function(e) {
+  $('#wb-float-size-toggle').on('click', function(e) {
       if (isDragging) return;
       e.stopPropagation(); e.preventDefault(); 
-      SWITCHER_STATE.autoMode = !SWITCHER_STATE.autoMode;
+      SWITCHER_STATE.floatSizeMode = SWITCHER_STATE.floatSizeMode === 'large' ? 'small' : 'large';
       saveSettings();
-      $(this).text(SWITCHER_STATE.autoMode ? '🔄' : '⏸️');
-      $(this).attr('title', SWITCHER_STATE.autoMode ? '自动模式: ON' : '自动模式: OFF');
-      const mainBtn = $('#wb-toggle-auto');
-      if(mainBtn.length) {
-          mainBtn.text(SWITCHER_STATE.autoMode ? '🔄 自动控制: ON' : '🔄 自动控制: OFF');
-          mainBtn.css('background', SWITCHER_STATE.autoMode ? SWITCHER_CONFIG.colors.pro : SWITCHER_CONFIG.colors.inactive);
+      const isLarge = SWITCHER_STATE.floatSizeMode === 'large';
+      $(this).text(isLarge ? '📏' : '📐');
+      $(this).attr('title', isLarge ? '切换为小悬浮窗' : '切换为大悬浮窗 (1.5x)');
+      createFloatingWindow();
+      const sizeBtn = $('#wb-float-size');
+      if(sizeBtn.length) {
+          sizeBtn.css('background', isLarge ? '#e53e3e' : '#4a5568');
+          sizeBtn.attr('title', isLarge ? '切换为小悬浮窗' : '切换为大悬浮窗 (1.5x)');
+          sizeBtn.text(isLarge ? '📏' : '📐');
       }
-      toastr.info(SWITCHER_STATE.autoMode ? '自动模式已开启' : '自动模式已暂停');
-      if(SWITCHER_STATE.autoMode) masterLoop(); 
+      toastr.info(isLarge ? '悬浮窗已切换为大模式 (1.5x)' : '悬浮窗已切换为小模式');
+      
   });
 
   $('#wb-float-close').on('click', function(e) {
@@ -1437,7 +1440,7 @@ function createSwitcherPanel() {
   });
 
   $('#wb-toggle-auto').on('click', function() {
-    SWITCHER_STATE.autoMode = !SWITCHER_STATE.autoMode; saveSettings();
+    SWITCHER_STATE.floatSizeMode = SWITCHER_STATE.floatSizeMode === 'large' ? 'small' : 'large'; saveSettings();
     $(this).text(SWITCHER_STATE.autoMode ? '🔄 自动: ON' : '🔄 自动: OFF'); // [修改] 对应精简文本
     $(this).css('background', SWITCHER_STATE.autoMode ? SWITCHER_CONFIG.colors.pro : SWITCHER_CONFIG.colors.inactive);
     
