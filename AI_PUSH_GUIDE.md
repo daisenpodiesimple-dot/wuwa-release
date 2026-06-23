@@ -62,6 +62,7 @@ git config --global --add safe.directory C:/SillyTavern/WuwaWorks
 | `function/` | SillyTavern 插件 d.ts 参考文件（仅供 AI 阅读，不需要入库） |
 | `tavern_resource-main/` | 酒馆助手参考文档（仅供 AI 阅读，不需要入库） |
 | `float_preview.html` | UI 预览临时文件 |
+| `ST_Prompt_Template/` | ST 提示词模板参考（仅供 AI 阅读，不需要入库） |
 | `GitHub_Release/` | GitHub 库文件（单独管理，见下方） |
 
 ### 单独管理：GitHub Release 库
@@ -76,5 +77,5 @@ git config --global --add safe.directory C:/SillyTavern/WuwaWorks
 
 1. `master` 在 gitgud 上是 protected branch，`git push --force` 会被远端拒绝，**永远不要用 force**。
 2. 用户要求"只入库某某文件"时，务必只 `git add` 指定文件，**不要碰其他文件**。
-3. `Character/` 文件夹里的角色卡 PNG 不入库 gitgud，它们是本地备份 / 给 GitHub Release 用的源文件。
+3. `Character/` 文件夹不入库 gitgud。里面有角色卡 PNG（本地备份 / 给 GitHub Release 用的源文件）和角色卡 JSON（仅供 AI 参考的角色卡结构导出，不需要入库）。
 4. `changelog.md`（根目录）是 GitHub Release 的更新日志副本，不入库 gitgud。

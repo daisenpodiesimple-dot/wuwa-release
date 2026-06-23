@@ -19,6 +19,7 @@ Desktop.ini
 function/
 tavern_resource-main/
 float_preview.html
+ST_Prompt_Template/
 
 # GitHub Release repo (managed separately via GitHub API)
 GitHub_Release/
