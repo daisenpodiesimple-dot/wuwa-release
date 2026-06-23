@@ -157,337 +157,519 @@ let currentChatChar = null;
 		        characters: {
             "秧秧": {
                 name: "秧秧",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yangyang.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/yangyang.webp",
                 signature: "睨睆苍翩，啾啾其鸣。",
                 plotWeight: 1000
             },
             "炽霞": {
                 name: "炽霞",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/chixia.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/chixia.webp",
                 signature: "想要成为英雄！",
                 plotWeight: 1000
             },
             "菲比": {
                 name: "菲比",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/feibi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/feibi.webp",
                 signature: "愿岁主为迷途之人照亮前路。",
                 plotWeight: 2001
             },
             "卡提希娅": {
                 name: "卡提希娅",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/katixiya.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/katixiya.webp",
                 signature: "修行中",
                 plotWeight: 2203
             },
             "露帕": {
                 name: "露帕",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/lupa.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/lupa.webp",
                 signature: "请继续支持露帕，谢谢大家！",
                 plotWeight: 2403
             },
             "弗洛洛": {
                 name: "弗洛洛",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/fuluoluo.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/fuluoluo.webp",
                 signature: "……或许是时候去寻找新的道路了。",
                 plotWeight: 2503
             },
             "布兰特": {
                 name: "布兰特",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/bulante.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/bulante.webp",
                 signature: "噢噢噢噢噢噢！",
                 plotWeight: 2001
             },
             "爱弥斯": {
                 name: "爱弥斯",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/aimisi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/aimisi.webp",
                 signature: "拉海洛的夜景今晚很漂亮呢。晚安！",
                 plotWeight: 3004
             },
             "琳奈": {
                 name: "琳奈",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/linnai.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/linnai.webp",
                 signature: "请支持科考摩托百日训练ε=ε=ε=ε=┌( *｀ω´)┘",
                 plotWeight: 3001
             },
             "仇远": {
                 name: "仇远",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qiuyuan.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/qiuyuan.webp",
                 signature: "签名 语音输入",
                 plotWeight: 2703
             },
             "千咲": {
                 name: "千咲",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qianxiao.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/qianxiao.webp",
                 signature: "普通学生（复课版)",
                 plotWeight: 2801
             },
             "嘉贝莉娜": {
                 name: "嘉贝莉娜",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jiabeilina.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/jiabeilina.webp",
                 signature: "全职猎魔，在线接单",
                 plotWeight: 2703
             },
             "卜灵": {
                 name: "卜灵",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/buling.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/buling.webp",
                 signature: "喜欢查成分的小鬼们你们好啊",
                 plotWeight: 2401
             },
             "灯灯": {
                 name: "灯灯",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/dengdeng.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/dengdeng.webp",
                 signature: "期待每一单咧~",
                 plotWeight: 1401
             },
             "相里要": {
                 name: "相里要",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xiangliyao.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/xiangliyao.webp",
                 signature: "华胥研究院的研究员相里要。您好。",
                 plotWeight: 1201
             },
             "折枝": {
                 name: "折枝",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/zhezhi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/zhezhi.webp",
                 signature: "如果没有及时回复就是在画画……很抱歉！",
                 plotWeight: 1201
             },
             "漂泊者（男）": {
                 name: "漂泊者（男）",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/rovermale.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/rovermale.webp",
                 signature: "我想留在大家身边……从过去，一同迈向明天。",
                 plotWeight: 1000
             },
             "珂莱塔": {
                 name: "珂莱塔",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kelaita.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/kelaita.webp",
                 signature: "谈生意，还是交朋友……以莫塔里的名义，合作愉快。",
                 plotWeight: 2002
             },
             "今汐": {
                 name: "今汐",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jinxi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/jinxi.webp",
                 signature: "今州边庭事物繁忙，回复不及时实属无奈，如有紧急要事请联络近卫散华。",
                 plotWeight: 1103
             },
             "漂泊者（女）": {
                 name: "漂泊者（女）",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/roverfemale.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/roverfemale.webp",
                 signature: "我想留在大家身边……从过去，一同迈向明天。",
                 plotWeight: 1000
             },
             "赞妮": {
                 name: "赞妮",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/zanni.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/zanni.webp",
                 signature: "有事情留言，急事通讯。",
                 plotWeight: 2001
             },
             "白芷": {
                 name: "白芷",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/baizhi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/baizhi.webp",
                 signature: "主攻回音声态，相关问题可以找我，其它问题烦请提前告知。",
                 plotWeight: 1001
             },
             "长离": {
                 name: "长离",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/changli.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/changli.webp",
                 signature: "\"为天地立心，为生民立命，为往圣继绝学，为万世开太平。\"",
                 plotWeight: 1103
             },
             "秋水": {
                 name: "秋水",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/qiushui.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/qiushui.webp",
                 signature: "有各种情报应有尽有，明码标价，童叟无欺，欢迎咨询！",
                 plotWeight: 1003
             },
             "丹瑾": {
                 name: "丹瑾",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/danjin.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/danjin.webp",
                 signature: "希望世界上的罪恶通通消失。",
                 plotWeight: 1003
             },
             "安可": {
                 name: "安可",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/anke.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/anke.webp",
                 signature: "安可想和大家多交朋友~",
                 plotWeight: 1003
             },
             "忌炎": {
                 name: "忌炎",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jiyan.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/jiyan.webp",
                 signature: "岂日无衣，与子同袍。",
                 plotWeight: 1003
             },
             "洛可可": {
                 name: "洛可可",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luokeke.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/luokeke.webp",
                 signature: "\"世界是个舞台，你我都是演员。\"",
                 plotWeight: 2001
             },
             "吟霖": {
                 name: "吟霖",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yinlin.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/yinlin.webp",
                 signature: "步步为营",
                 plotWeight: 1003
             },
             "卡卡罗": {
                 name: "卡卡罗",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kakaluo.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/kakaluo.webp",
                 signature: "你的委托，我一人足够。",
                 plotWeight: 1003
             },
             "凌阳": {
                 name: "凌阳",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/lingyang.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/lingyang.webp",
                 signature: "诸邪避散，岁岁平安！",
                 plotWeight: 1003
             },
             "渊武": {
                 name: "渊武",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/yuanwu.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/yuanwu.webp",
                 signature: "欢迎来到渊武武馆。",
                 plotWeight: 1003
             },
             "夏空": {
                 name: "夏空",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xiakong.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/xiakong.webp",
                 signature: "愿我的歌伴你而行，跨过时间的海洋，在永恒中回响~",
                 plotWeight: 2201
             },
             "尤诺": {
                 name: "尤诺",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/younuo.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/younuo.webp",
                 signature: "没印象的话就重新认识吧，尤诺....这次要记好咯。",
                 plotWeight: 2602
             },
             "奥古斯塔": {
                 name: "奥古斯塔",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/aogusita.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/aogusita.webp",
                 signature: "事务繁忙，留言漏回请催我，急事总督官面谈。",
                 plotWeight: 2601
             },
             "陆·赫斯": {
                 name: "陆·赫斯",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luhesi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/luhesi.webp",
                 signature: "不捣蛋就给糖！:'-).",
                 plotWeight: 3001
             },
             "莫宁": {
                 name: "莫宁",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/moning.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/moning.webp",
                 signature: "消息都会回复的，未回请稍等。",
                 plotWeight: 3001
             },
             "鉴心": {
                 name: "鉴心",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/jianxin.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/jianxin.webp",
                 signature: "内外合修，净尽无余，自得玄妙，造道之极。",
                 plotWeight: 1001
             },
             "守岸人": {
                 name: "守岸人",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/shouanren.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/shouanren.webp",
                 signature: "黑海岸接口人，嗯……代行中",
                 plotWeight: 1303
             },
             "椿": {
                 name: "椿",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/chun.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/chun.webp",
                 signature: "……一同起舞吧❤~",
                 plotWeight: 1303
             },
             "釉瑚": {
                 name: "釉瑚",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/youhu.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/youhu.webp",
                 signature: "鉴宝大师釉瑚是也！",
                 plotWeight: 1301
             },
             "坎特蕾拉": {
                 name: "坎特蕾拉",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/kanteleila.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/kanteleila.webp",
                 signature: "特效药批发",
                 plotWeight: 2203
             },
             "桃祈": {
                 name: "桃祈",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/taoqi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/taoqi.webp",
                 signature: "……想睡觉喵。",
                 plotWeight: 1003
             },
             "散华": {
                 name: "散华",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/sanhua.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/sanhua.webp",
                 signature: "边庭相关事宜，或有事叨扰令尹，可以由我代为转达。",
                 plotWeight: 1001
             },
             "西格莉卡": {
                 name: "西格莉卡",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/xigelika.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/xigelika.webp",
                 signature: "嘤嘤鹦真的不是雪衫帝小时候！",
                 plotWeight: 3201
             },
             "洛瑟菈": {
                 name: "洛瑟菈",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luosela.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/luosela.webp",
                 signature: "风格在言语之前表达。",
                 plotWeight: 3101
             },
             "绯雪": {
                 name: "绯雪",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/feixue.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/feixue.webp",
                 signature: "请输入文本",
                 plotWeight: 3301
             },
             "达妮娅": {
                 name: "达妮娅",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/daniya.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/daniya.webp",
                 signature: "好困……没事请不要找我。",
                 plotWeight: 3303
             },
             "露西": {
                 name: "露西",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/luxi.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/luxi.webp",
                 signature: "做了一个好梦。",
                 plotWeight: 3401
             },
             "丽贝卡": {
                 name: "丽贝卡",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/libeika.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/libeika.webp",
                 signature: "沉迷涂鸦创作，不接受任何审美指点。觉得难看？给我憋着！",
                 plotWeight: 3401
             },
             "IRIS": {
                 name: "IRIS",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/iris.png",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/iris.png",
                 signature: "有问题？不妨试着问问我吧！",
                 plotWeight: 3001
             },
             "莫特斐": {
                 name: "莫特斐",
-                avatar: "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Avatars/motefei.webp",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/motefei.webp",
                 signature: "有需求欢迎找我，前提是得合理。",
                 plotWeight: 1001
             }
         },
 
         emojis: {
-            "阿布-疑问": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/yiwen.png",
-            "阿布-哼，不理你了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/heng-bulinile.png",
-            "阿布-石化了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shihuale.png",
-            "阿布-双手合十": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shuangshouheshi.png",
-            "阿布-送你一朵小花花": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/songniyiduoxiaohuahua.png",
-            "阿布-太棒了，好喜欢": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/taibangle-haoxihuan.png",
-            "阿布-伸懒腰": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/shenlanyao.png",
-            "阿布-就这？嘲讽的笑容": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/jiuzhe-chaofengdexiaorong.png",
-            "阿布-火冒三丈": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/huomaosanzhang.png",
-            "阿布-摸摸头": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/momotou.png",
-            "阿布-干杯": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/ganbei.png",
-            "阿布-好难过，emo了": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/haonanguo-emole.png",
-            "阿布-点赞": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/dianzan.png",
-			"阿布-流口水": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/liukoushui.png",
-            "阿布-打招呼": "https://gitgud.io/akagishigeru/wuwa-images/-/raw/master/Abby/dazhaohu.png"
+            "阿布-疑问": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/yiwen.png",
+            "阿布-哼，不理你了": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/heng-bulinile.png",
+            "阿布-石化了": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/shihuale.png",
+            "阿布-双手合十": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/shuangshouheshi.png",
+            "阿布-送你一朵小花花": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/songniyiduoxiaohuahua.png",
+            "阿布-太棒了，好喜欢": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/taibangle-haoxihuan.png",
+            "阿布-伸懒腰": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/shenlanyao.png",
+            "阿布-就这？嘲讽的笑容": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/jiuzhe-chaofengdexiaorong.png",
+            "阿布-火冒三丈": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/huomaosanzhang.png",
+            "阿布-摸摸头": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/momotou.png",
+            "阿布-干杯": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/ganbei.png",
+            "阿布-好难过，emo了": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/haonanguo-emole.png",
+            "阿布-点赞": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/dianzan.png",
+			"阿布-流口水": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/liukoushui.png",
+            "阿布-打招呼": "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Abby/dazhaohu.png"
         }
         // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     };
+
+
+    // ========================================================================
+    // 【图片缓存系统】Canvas→base64→IndexedDB，加载所有头像/表情并本地化
+    // 加载后把 base64 写回 FEIXUN_DB，使所有 <img src> 渲染自动使用本地缓存，
+    // 不再单纯依赖浏览器 HTML 缓存。（参考 StatusBar 立绘缓存机制）
+    // ========================================================================
+    const FX_IMG_DB_NAME = 'feixunImgCacheDB';
+    const FX_IMG_STORE = 'images';
+    let fxImgDB = null;
+    let fxImgCacheReady = false;
+    const fxImgMemCache = new Map();     // url -> base64 dataURL
+    const fxOrigAvatarUrls = {};          // charKey -> 原始 URL
+    const fxOrigEmojiUrls = {};           // emojiName -> 原始 URL
+    let fxAllImageUrls = [];               // 需缓存的唯一 URL 列表
+
+    // 在 FEIXUN_DB 被改写前快照所有原始图片 URL
+    (function fxSnapshotOrigUrls() {
+        Object.entries(FEIXUN_DB.characters).forEach(([k, v]) => {
+            if (v && v.avatar) fxOrigAvatarUrls[k] = v.avatar;
+        });
+        Object.entries(FEIXUN_DB.emojis).forEach(([k, v]) => {
+            if (v) fxOrigEmojiUrls[k] = v;
+        });
+        fxAllImageUrls = [...new Set([...Object.values(fxOrigAvatarUrls), ...Object.values(fxOrigEmojiUrls)])];
+    })();
+
+    // 启动时从持久化(chat变量)回灌自定义角色到 FEIXUN_DB（不覆盖同名内置角色）
+    (function fxLoadCustomChars() {
+        try {
+            // 优先全局，chat 补充；全局跨聊天可见
+            const gCustom = getVariables({type: 'global'})?.fx_custom_chars;
+            const cCustom = getVariables({type: 'chat'})?.fx_custom_chars;
+            const merged = Object.assign({}, gCustom || {}, cCustom || {});
+            if (merged && typeof merged === 'object') {
+                Object.entries(merged).forEach(([k, v]) => {
+                    if (v && v.name && !FEIXUN_DB.characters[k]) FEIXUN_DB.characters[k] = v;
+                });
+            }
+        } catch (e) { console.warn('[飞讯] 回灌自定义角色失败', e); }
+    })();
+
+    function fxGetIDB() {
+        if (typeof indexedDB !== 'undefined') return indexedDB;
+        if (window.parent && window.parent.indexedDB) return window.parent.indexedDB;
+        return null;
+    }
+
+    function openFxImgDB() {
+        return new Promise((resolve, reject) => {
+            const idb = fxGetIDB();
+            if (!idb) { reject(new Error('no IndexedDB')); return; }
+            const req = idb.open(FX_IMG_DB_NAME, 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(FX_IMG_STORE)) db.createObjectStore(FX_IMG_STORE);
+            };
+            req.onsuccess = (e) => { fxImgDB = e.target.result; resolve(fxImgDB); };
+            req.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    // 读取缓存：内存优先，其次 IndexedDB（命中后回填内存）
+    async function fxGetCachedImage(url) {
+        try {
+            if (fxImgMemCache.has(url)) return fxImgMemCache.get(url);
+            if (!fxImgDB) await openFxImgDB();
+            return await new Promise((resolve) => {
+                const tx = fxImgDB.transaction([FX_IMG_STORE], 'readonly');
+                const req = tx.objectStore(FX_IMG_STORE).get(url);
+                req.onsuccess = () => {
+                    const v = req.result;
+                    if (typeof v === 'string') { fxImgMemCache.set(url, v); resolve(v); }
+                    else resolve(null);
+                };
+                req.onerror = () => resolve(null);
+            });
+        } catch (e) { return null; }
+    }
+
+    // 下载图片 → Canvas 转 base64 → 存入 IndexedDB，返回可用的 dataURL（失败回退原 URL）
+    // 下载图片并转 base64 存入 IndexedDB（与 StatusBar 立绘缓存同款方法：fetch + blob + FileReader）
+    // cache:'reload' 强制绕过浏览器 HTTP 缓存，确保始终从 jsdelivr 真实重新下载
+    async function fxFetchAndCacheImage(url) {
+        const cached = await fxGetCachedImage(url);
+        if (cached) return cached;
+        try {
+            const resp = await fetch(url, { cache: 'reload' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const blob = await resp.blob();
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsDataURL(blob);
+            });
+            // 存入 IndexedDB（base64 dataURL）
+            if (!fxImgDB) await openFxImgDB();
+            await new Promise((resolve, reject) => {
+                const tx = fxImgDB.transaction([FX_IMG_STORE], 'readwrite');
+                tx.objectStore(FX_IMG_STORE).put(dataUrl, url);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+            fxImgMemCache.set(url, dataUrl);
+            return dataUrl;
+        } catch (e) {
+            return url; // 下载失败回退到原始直链
+        }
+    }
+
+    // 把缓存中的 base64 写回 FEIXUN_DB，使所有渲染自动用本地图片
+    function fxApplyCacheToDB() {
+        for (const [k, url] of Object.entries(fxOrigAvatarUrls)) {
+            const b = fxImgMemCache.get(url);
+            if (b && b !== url && FEIXUN_DB.characters[k]) FEIXUN_DB.characters[k].avatar = b;
+        }
+        for (const [k, url] of Object.entries(fxOrigEmojiUrls)) {
+            const b = fxImgMemCache.get(url);
+            if (b && b !== url) FEIXUN_DB.emojis[k] = b;
+        }
+    }
+
+    // 缓存全部图片（带进度回调），完成后写回 FEIXUN_DB
+    async function fxCacheAllImages(onProgress) {
+        try { if (!fxImgDB) await openFxImgDB(); }
+        catch (e) { console.warn('[飞讯] 图片缓存DB初始化失败', e); fxApplyCacheToDB(); return; }
+        let done = 0;
+        for (const url of fxAllImageUrls) {
+            const b64 = await fxFetchAndCacheImage(url);
+            if (b64 && b64 !== url) fxImgMemCache.set(url, b64);
+            done++;
+            if (onProgress) onProgress(done, fxAllImageUrls.length);
+        }
+        fxApplyCacheToDB();
+        fxImgCacheReady = true;
+    }
+
+    // 清除图片缓存：清空 IndexedDB + 内存 + 还原 FEIXUN_DB 原始 URL
+    async function fxClearImageCache() {
+        try {
+            try { if (!fxImgDB) await openFxImgDB(); } catch (e) {}
+            if (fxImgDB) {
+                await new Promise((resolve) => {
+                    const tx = fxImgDB.transaction([FX_IMG_STORE], 'readwrite');
+                    tx.objectStore(FX_IMG_STORE).clear();
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                });
+            }
+        } catch (e) {}
+        fxImgMemCache.clear();
+        fxImgCacheReady = false;
+        for (const [k, url] of Object.entries(fxOrigAvatarUrls)) { if (FEIXUN_DB.characters[k]) FEIXUN_DB.characters[k].avatar = url; }
+        for (const [k, url] of Object.entries(fxOrigEmojiUrls)) { FEIXUN_DB.emojis[k] = url; }
+    }
+
+    // 预加载入口：首次/清除后显示进度条加载；已缓存则直接本地化（无进度条）
+    async function fxPreloadImages() {
+        // 已缓存：直接把本地 base64 写回 FEIXUN_DB 并刷新列表（不走进度条）
+        if (fxImgCacheReady) { fxApplyCacheToDB(); if (!currentChatChar) buildContactList(); return; }
+        const $prog = p$('#fx-img-progress');
+        const $bar = p$('#fx-img-progress-bar');
+        const $cnt = p$('#fx-img-progress-count');
+        const $label = p$('#fx-img-progress-label');
+        if (!$prog.length) { await fxCacheAllImages(); if (!currentChatChar) buildContactList(); return; }
+        $prog.css('display', 'flex');
+        $bar.css('width', '0%');
+        $label.text('正在加载图片资源');
+        $cnt.text('0/' + fxAllImageUrls.length);
+        try {
+            await fxCacheAllImages((done, total) => {
+                $bar.css('width', (done / total * 100) + '%');
+                $cnt.text(done + '/' + total);
+            });
+            // 加载完成：把已转好的 base64 应用到当前列表（无感切换本地图）
+            if (!currentChatChar) buildContactList();
+        } catch (e) {
+            console.warn('[飞讯] 图片预加载出错', e);
+        }
+        $prog.css('display', 'none');
+    }
 
   // ========================================================================
     // 【新增】表情名归一化与匹配工具：统一全角/半角，提升鲁棒性
@@ -2224,6 +2406,10 @@ ${historyText}
         .fx-search-input { flex:1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--fx-border); background: var(--fx-input-field); color: var(--fx-text); outline: none; transition: background 0.3s; }
         .fx-create-group-btn { cursor:pointer; color: #4a9eff; font-size: 20px; transition: 0.2s; }
         .fx-create-group-btn:hover { transform: scale(1.1); }
+        .fx-quick-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; color:#4a9eff; gap:2px; flex-shrink:0; }
+        .fx-quick-btn i { font-size:20px; transition:0.2s; }
+        .fx-quick-btn:hover i { transform: scale(1.1); }
+        .fx-quick-btn span { font-size:10px; color: var(--fx-time); white-space:nowrap; }
         
         #fx-view-list { overflow-y: auto; }
         #fx-contact-container { padding: 0 10px 10px 10px; }
@@ -2360,6 +2546,13 @@ ${historyText}
     const FX_HTML = `
         <div id="fx-backdrop"></div>
         <div id="fx-main-panel" data-theme="light">
+            <div id="fx-img-progress" style="flex-shrink:0; display:none; align-items:center; gap:8px; height:26px; padding:0 12px; background:var(--fx-header-bg); border-bottom:1px solid var(--fx-border); font-size:11px; color:var(--fx-text);">
+                <span id="fx-img-progress-label" style="white-space:nowrap;">正在加载图片资源</span>
+                <div style="flex:1; height:4px; background:rgba(74,158,255,0.15); border-radius:2px; overflow:hidden;">
+                    <div id="fx-img-progress-bar" style="height:100%; width:0%; background:#4a9eff; border-radius:2px; transition:width 0.15s ease;"></div>
+                </div>
+                <span id="fx-img-progress-count" style="white-space:nowrap;">0/0</span>
+            </div>
             <div class="fx-header">
                 <i class="fa-solid fa-chevron-left fx-back-btn" id="fx-back-btn"></i>
                 <div style="display:flex; align-items:center; overflow:hidden; flex:1; margin-right:10px;">
@@ -2386,7 +2579,8 @@ ${historyText}
             <div class="fx-view active fx-anim-fade-up" id="fx-view-list">
                 <div class="fx-search-bar">
                     <input type="text" class="fx-search-input" id="fx-search-input" placeholder="搜索联系人...">
-                    <i class="fa-solid fa-users-viewfinder fx-create-group-btn" id="fx-show-create-group" title="发起群聊"></i>
+                    <div class="fx-quick-btn" id="fx-show-create-group" title="发起群聊"><i class="fa-solid fa-users-viewfinder"></i><span>发起群聊</span></div>
+                    <div class="fx-quick-btn" id="fx-show-add-char" title="添加自定义角色"><i class="fa-solid fa-plus"></i><span>添加角色</span></div>
                 </div>
                 <div id="fx-contact-container"></div>
             </div>
@@ -2400,6 +2594,34 @@ ${historyText}
                     <div id="fx-mention-panel"></div>
                     <textarea class="fx-input" id="fx-input" placeholder="发送飞讯..." rows="1"></textarea>
                     <button class="fx-icon-btn" id="fx-send-btn"><i class="fa-solid fa-paper-plane" id="fx-send-icon"></i></button>
+                </div>
+            </div>
+
+            <div class="fx-view" id="fx-view-add-char">
+                <div style="flex:1; overflow-y:auto; padding:20px 20px 10px;">
+                    <div style="font-size:15px; font-weight:bold; margin-bottom:15px;">添加自定义角色</div>
+
+                    <div style="font-size:12px; color:var(--fx-time); margin-bottom:6px;">选择头像</div>
+                    <div id="fx-addchar-avatar-placeholder" style="width:152px; height:152px; border-radius:50%; border:2px dashed var(--fx-border); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; background:var(--fx-input-bg); margin-bottom:4px;" title="点击选择头像">
+                        <img id="fx-addchar-avatar-preview" src="" style="width:100%; height:100%; object-fit:cover; border-radius:50%; display:none;">
+                        <i class="fa-solid fa-camera" style="font-size:30px; color:var(--fx-time);"></i>
+                    </div>
+                    <div style="font-size:10px; color:var(--fx-time);">推荐比例 1:1，非正方形图将裁取中心正方形区域</div>
+                    <input type="file" id="fx-addchar-avatar-input" accept="image/*" style="display:none;">
+
+                    <div style="font-size:12px; color:var(--fx-time); margin:18px 0 6px;">角色名字</div>
+                    <input type="text" id="fx-addchar-name" placeholder="请输入角色名" style="width:100%; box-sizing:border-box; padding:9px 11px; border-radius:8px; border:1px solid var(--fx-border); background:var(--fx-input-field); color:var(--fx-text); font-size:13px;">
+                    <div style="font-size:12px; color:var(--fx-time); margin:13px 0 6px;">个性签名</div>
+                    <input type="text" id="fx-addchar-sig" placeholder="一句话个性签名（可选）" style="width:100%; box-sizing:border-box; padding:9px 11px; border-radius:8px; border:1px solid var(--fx-border); background:var(--fx-input-field); color:var(--fx-text); font-size:13px;">
+
+                    <div style="font-size:11px; color:var(--fx-time); margin:18px 0 0; padding:10px; border-radius:8px; background:var(--fx-input-bg); line-height:1.6;">
+                        <i class="fa-solid fa-circle-info" style="color:#4a9eff; margin-right:4px;"></i>
+                        此自定义角色，请确保你已经在世界中，通过世界书或者其他方式注入了此自定义角色的资料，且可以通过其名字关键词触发。
+                    </div>
+                </div>
+                <div style="flex-shrink:0; display:flex; gap:10px; padding:12px 20px; border-top:1px solid var(--fx-border);">
+                    <button class="fx-btn" id="fx-addchar-cancel" style="flex:1;">取消</button>
+                    <button class="fx-btn fx-btn-primary" id="fx-addchar-confirm" style="flex:1;">创建角色</button>
                 </div>
             </div>
         </div>
@@ -2424,7 +2646,7 @@ ${historyText}
                         <div style="font-size:13px; display:flex; flex-direction:column;">
                             <span>反机械化反数据</span>
                             <span style="font-size:10px; color:var(--fx-time);">肘击AI让它写通俗易懂的感性表达</span>
-                        </div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-antimech"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>隐藏正文注入</span><span style="font-size:10px; color:var(--fx-time);">将物理注入至正文的记录文本设为空</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-hideinject"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; display:flex; flex-direction:column;"><span>选择记录注入方式</span><span style="font-size:10px; color:var(--fx-time);">切换为世界书模式可保持正文干净</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-chat" style="color:#4a9eff; font-weight:bold;">正文</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-injectmode"><span class="fx-slider"></span></label><span id="fx-lbl-wb" style="color:var(--fx-time);">世界书</span></div></div></div><div class="fx-modal-footer"><button class="fx-btn fx-btn-primary" id="fx-close-settings">完成</button></div></div></div>
+                        </div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-antimech"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>隐藏正文注入</span><span style="font-size:10px; color:var(--fx-time);">将物理注入至正文的记录文本设为空</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-hideinject"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; display:flex; flex-direction:column;"><span>选择记录注入方式</span><span style="font-size:10px; color:var(--fx-time);">切换为世界书模式可保持正文干净</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-chat" style="color:#4a9eff; font-weight:bold;">正文</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-injectmode"><span class="fx-slider"></span></label><span id="fx-lbl-wb" style="color:var(--fx-time);">世界书</span></div></div></div><div class="fx-modal-footer"><button class="fx-btn" id="fx-clear-img-cache" style="white-space:nowrap;">清除缓存并重新加载</button><button class="fx-btn fx-btn-primary" id="fx-close-settings">完成</button></div></div></div>
         <div class="fx-modal" id="fx-summary-modal">
             <div class="fx-modal-content" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column;">
                 <div class="fx-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -2585,6 +2807,7 @@ ${historyText}
         p$('#fx-back-btn, #fx-summary-btn, #fx-group-mgr-btn').hide(); // 新版隐藏逻辑
         p$('#fx-theme-container').show(); 
         buildContactList();
+        fxPreloadImages();   // 后台预加载图片到 IndexedDB，不阻塞列表渲染
     }
 
     function buildContactList() {
@@ -2594,6 +2817,7 @@ ${historyText}
         const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
         const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
         const unreadCounts = getUnreadCounts();
+        const customCharKeys = Object.keys(getVariables({type: 'chat'})?.fx_custom_chars || {});
         
         const searchTerm = p$('#fx-search-input').val()?.toLowerCase() || "";
         const allLogs = getFeixunLogs();
@@ -2614,7 +2838,8 @@ ${historyText}
             displayList.push({ 
                 key, isGroup: false, data, 
                 isUnlocked: (currentPlotWeight > data.plotWeight) || forcedUnlocks.includes(key), 
-                isForced: forcedUnlocks.includes(key), isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key) 
+                isForced: forcedUnlocks.includes(key), isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key), 
+                isCustomChar: customCharKeys.includes(key) 
             });
         });
 
@@ -2666,6 +2891,7 @@ ${historyText}
                 actionsHtml += `<i class="fa-solid fa-thumbtack fx-action-btn ${c.isPinned ? 'active-pin' : ''}" title="置顶" data-action="pin" data-char="${c.key}"></i>`;
                 actionsHtml += `<i class="fa-solid fa-arrow-down fx-action-btn ${c.isBottom ? 'active-bottom' : ''}" title="沉底" data-action="bottom" data-char="${c.key}"></i>`;
                 if (c.isGroup) actionsHtml += `<i class="fa-solid fa-trash-can fx-action-btn" title="解散群聊" data-action="delete-group" data-char="${c.key}"></i>`;
+                if (c.isCustomChar) actionsHtml += `<i class="fa-solid fa-trash-can fx-action-btn" title="删除自定义角色" data-action="delete-char" data-char="${c.key}"></i>`;
             }
             actionsHtml += `</div>`;
 
@@ -2707,15 +2933,47 @@ ${historyText}
                             for (let i = 0; i < groupLogs.length; i++) await deletePhysicalFeixunMessage(char, groupLogs[i]);
                         }
                         try {
-                            if (typeof deleteVariable === 'function') {
+                            // 删除群聊相关变量：用 updateVariablesWith 在官方变量表上直接删键
+                            if (typeof updateVariablesWith === 'function') {
+                                await updateVariablesWith(v => {
+                                    if (v.feixun_logs && v.feixun_logs[char]) delete v.feixun_logs[char];
+                                    if (v.fx_groups && v.fx_groups[char]) delete v.fx_groups[char];
+                                    return v;
+                                }, { type: 'chat' });
+                            } else if (typeof deleteVariable === 'function') {
                                 await deleteVariable(`feixun_logs.${char}`, { type: 'chat' });
                                 await deleteVariable(`fx_groups.${char}`, { type: 'chat' });
-                            } else {
-                                let allLogs = getFeixunLogs(); allLogs[char] = []; await insertOrAssignVariables({ feixun_logs: allLogs }, { type: 'chat' });
-                                let allGroups = getFeixunGroups(); allGroups[char] = null; await insertOrAssignVariables({ fx_groups: allGroups }, { type: 'chat' });
                             }
                         } catch (err) {}
                         notify('success', `已解散群聊：${dName}`); buildContactList(); 
+                    }
+                } else if (action === 'delete-char') {
+                    if (confirm(`确定要删除自定义角色【${dName}】吗？\n其聊天记录将保留，可重新创建同名角色。`)) {
+                        try {
+                            delete FEIXUN_DB.characters[char];
+                            // 删除持久化变量：必须用 updateVariablesWith 在官方变量表上直接删键再返回
+                            // （insertOrAssignVariables 是深 merge，不会删掉已存在的键）
+                            if (typeof updateVariablesWith === 'function') {
+                                await updateVariablesWith(v => {
+                                    if (v.fx_custom_chars && v.fx_custom_chars[char]) delete v.fx_custom_chars[char];
+                                    return v;
+                                }, { type: 'chat' });
+                                await updateVariablesWith(v => {
+                                    if (v.fx_custom_chars && v.fx_custom_chars[char]) delete v.fx_custom_chars[char];
+                                    return v;
+                                }, { type: 'global' });
+                                await updateVariablesWith(v => {
+                                    if (Array.isArray(v.fx_pinned_chars)) v.fx_pinned_chars = v.fx_pinned_chars.filter(x => x !== char);
+                                    if (Array.isArray(v.fx_bottom_chars)) v.fx_bottom_chars = v.fx_bottom_chars.filter(x => x !== char);
+                                    if (Array.isArray(v.fx_forced_unlocks)) v.fx_forced_unlocks = v.fx_forced_unlocks.filter(x => x !== char);
+                                    return v;
+                                }, { type: 'chat' });
+                            } else {
+                                try { await deleteVariable(`fx_custom_chars.${char}`, { type: 'chat' }); } catch (e) {}
+                                try { await deleteVariable(`fx_custom_chars.${char}`, { type: 'global' }); } catch (e) {}
+                            }
+                        } catch (err) { console.warn('[飞讯] 删除自定义角色失败', err); }
+                        notify('success', `已删除自定义角色：${dName}`);
                     }
                 }
                 buildContactList(); 
@@ -3013,6 +3271,18 @@ async function executeCloseFeixun() {
             p$('#fx-settings-btn').on('click', () => { initSettingsUI(); p$('#fx-settings-modal').css('display', 'flex'); });
             p$('#fx-close-settings').on('click', () => p$('#fx-settings-modal').hide());
 
+            // ===== 清除图片缓存并重新加载 =====
+            p$('#fx-clear-img-cache').on('click', async () => {
+                p$('#fx-settings-modal').hide();
+                // 1. 清空 IndexedDB + 内存缓存，并把 FEIXUN_DB 还原为原始直链
+                await fxClearImageCache();
+                // 2. 立即重渲列表（此时头像回到 jsdelivr 直链，确认删除生效）
+                if (!currentChatChar) buildContactList();
+                if (typeof notify === 'function') notify('info', '已清除图片缓存，正在重新加载...');
+                // 3. 重新后台缓存（进度条会持续显示直到加载完成）
+                await fxPreloadImages();
+            });
+
             // ===== 飞讯独立API设置弹窗逻辑 =====
             const initApiUI = () => {
                 const cfg = getFxGlobalConfig();
@@ -3302,7 +3572,83 @@ async function executeCloseFeixun() {
                 pWindow.fxViewportAttached = true;
             }
 
-            p$('#fx-show-create-group').on('click', () => {
+            // ===== 添加自定义角色 =====
+            p$('#fx-show-add-char').on('click', () => {
+                switchView('add-char');
+                p$('#fx-header-title').text('添加自定义角色');
+                p$('#fx-header-sign').hide();
+                p$('#fx-back-btn, #fx-summary-btn, #fx-group-mgr-btn, #fx-theme-container').hide();
+                p$('#fx-addchar-name').val('');
+                p$('#fx-addchar-sig').val('');
+                p$('#fx-addchar-avatar-input').val('');
+                p$('#fx-addchar-avatar-preview').attr('src', '').hide();
+                p$('#fx-addchar-avatar-placeholder .fa-camera').show();
+            });
+
+            p$('#fx-addchar-avatar-placeholder, #fx-addchar-avatar-preview').on('click', () => {
+                p$('#fx-addchar-avatar-input')[0].click();
+            });
+            p$('#fx-addchar-avatar-input').on('change', function() {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // cover 裁剪：取图片中心 1:1 区域，不留边；输出 152x152
+                        const canvas = document.createElement('canvas');
+                        const W = 152, H = 152;
+                        canvas.width = W; canvas.height = H;
+                        const ctx = canvas.getContext('2d');
+                        const srcSize = Math.min(img.width, img.height);
+                        const sx = (img.width - srcSize) / 2;
+                        const sy = (img.height - srcSize) / 2;
+                        ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, W, H);
+                        let dataUrl;
+                        try { dataUrl = canvas.toDataURL('image/webp', 0.92); }
+                        catch (e2) { dataUrl = canvas.toDataURL('image/png'); }
+                        p$('#fx-addchar-avatar-preview').attr('src', dataUrl).show();
+                        p$('#fx-addchar-avatar-placeholder .fa-camera').hide();
+                    };
+                    img.onerror = () => { if (typeof notify === 'function') notify('error', '图片加载失败'); };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            p$('#fx-addchar-cancel').on('click', () => { renderContactList(); });
+
+            p$('#fx-addchar-confirm').on('click', async () => {
+                const name = (p$('#fx-addchar-name').val() || '').trim();
+                if (!name) { if (typeof notify === 'function') notify('warning', '请输入角色名字'); return; }
+                if (FEIXUN_DB.characters[name]) {
+                    if (typeof notify === 'function') notify('warning', '该角色名已存在：' + name);
+                    return;
+                }
+                const previewSrc = p$('#fx-addchar-avatar-preview').attr('src');
+                const avatar = previewSrc || getDefaultAvatarBase64();
+                const sig = (p$('#fx-addchar-sig').val() || '').trim();
+                const newChar = { name: name, avatar: avatar, signature: sig, plotWeight: 1 };
+                FEIXUN_DB.characters[name] = newChar;
+                try {
+                    const customChars = getVariables({type: 'chat'})?.fx_custom_chars || {};
+                    customChars[name] = newChar;
+                    await insertOrAssignVariables({ fx_custom_chars: customChars }, { type: 'chat' });
+                    // 同步写入全局变量（跨聊天可见）
+                    const gCustomChars = getVariables({type: 'global'})?.fx_custom_chars || {};
+                    gCustomChars[name] = newChar;
+                    await insertOrAssignVariables({ fx_custom_chars: gCustomChars }, { type: 'global' });
+                } catch (e) { console.warn('[飞讯] 持久化自定义角色失败', e); }
+                try {
+                    const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
+                    if (!pinnedChars.includes(name)) pinnedChars.unshift(name);
+                    await insertOrAssignVariables({ fx_pinned_chars: pinnedChars }, { type: 'chat' });
+                } catch (e) { console.warn('[飞讯] 置顶自定义角色失败', e); }
+                if (typeof notify === 'function') notify('success', '已创建自定义角色：' + name);
+                renderContactList();
+            });
+
+                        p$('#fx-show-create-group').on('click', () => {
                 const $list = p$('#fx-group-members-list').empty();
                 const plotW = getCurrentPlotWeight(); 
                 const forced = getVariables({type: 'chat'})?.fx_forced_unlocks || [];

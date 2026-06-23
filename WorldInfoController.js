@@ -47,7 +47,11 @@ let SWITCHER_STATE = {
   uiDarkMode: true,
 };
 
-const AUTO_BLUE_STRATEGY_FLAG = "_wuwaAutoBlue";
+// 自动蓝灯/手动蓝灯条目 uid（内存镜像，持久化到全局变量）
+let autoBlueUids = [];
+let manualBlueUids = [];
+let autoBlueInitDone = false;
+
 
 // 深浅色模式（存全局变量 wuwa_wb_ui_dark，跨会话持久）
 async function loadWbUiDarkMode() {
@@ -63,6 +67,29 @@ async function saveWbUiDarkMode() {
     await updateVariablesWith(
       (v) => {
         _.set(v, "wuwa_wb_ui_dark", SWITCHER_STATE.uiDarkMode);
+        return v;
+      },
+      { type: "global" },
+    );
+  } catch (e) {}
+}
+
+// 加载自动蓝灯/手动蓝灯 uid 列表（从全局变量）
+async function loadAutoBlueUids() {
+  try {
+    const g = await getVariables({ type: "global" });
+    if (g && Array.isArray(g.wuwa_auto_blue_uids)) autoBlueUids = g.wuwa_auto_blue_uids;
+    if (g && Array.isArray(g.wuwa_manual_blue_uids)) manualBlueUids = g.wuwa_manual_blue_uids;
+  } catch (e) {}
+}
+
+// 持久化自动蓝灯/手动蓝灯 uid 列表
+async function saveAutoBlueUids() {
+  try {
+    await updateVariablesWith(
+      (v) => {
+        _.set(v, "wuwa_auto_blue_uids", [...autoBlueUids]);
+        _.set(v, "wuwa_manual_blue_uids", [...manualBlueUids]);
         return v;
       },
       { type: "global" },
@@ -235,9 +262,12 @@ function isAutoBlueKeywordHit(entry, displayText) {
 // mode: 'manualBlue'(constant) | 'autoBlue'(剧情显示命中) | 'green'(世界书扫描命中) | null
 function getStoryActivationState(entry, scanText, displayText) {
   if (!entry || !entry.enabled) return { active: false, mode: null };
+  // 手动蓝灯优先判定（不管 strategy 当前是什么，manualBlueUids 里就是手动蓝灯）
+  if (manualBlueUids.includes(entry.uid))
+    return { active: true, mode: "manualBlue" };
   const strategy = entry.strategy;
   if (strategy && strategy.type === "constant") {
-    if (strategy[AUTO_BLUE_STRATEGY_FLAG] === true)
+    if (autoBlueUids.includes(entry.uid))
       return { active: true, mode: "autoBlue" };
     return { active: true, mode: "manualBlue" };
   }
@@ -529,36 +559,46 @@ async function applyStrategyChanges(bookName, strategyOps, silent = false) {
 }
 
 async function syncAutoBlueStrategies(localData, displayText) {
-  const items = [
-    ...((localData && localData.stories) || []),
-    ...((localData && localData.summaries) || []),
-  ];
-  if (items.length === 0) return false;
+  const stories = (localData && localData.stories) || [];
+  const summaries = (localData && localData.summaries) || [];
+  if (stories.length === 0 && summaries.length === 0) return false;
 
   const mode = SWITCHER_STATE.simpTradMode;
-  const opsByBook = {};
 
-  items.forEach((item) => {
+  // 收集命中候选：排除手动蓝灯（manualBlueUids），stories 优先，同类按条目名排序取第一个
+  const storyHits = stories
+    .filter((s) => s.enabled && matchSimpTradMode(s.simpTrad, mode) && !manualBlueUids.includes(s.uid) && isAutoBlueKeywordHit(s, displayText))
+    .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+  const summaryHits = summaries
+    .filter((s) => s.enabled && matchSimpTradMode(s.simpTrad, mode) && !manualBlueUids.includes(s.uid) && isAutoBlueKeywordHit(s, displayText))
+    .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+
+  const candidates = [...storyHits, ...summaryHits];
+  const keepUid = candidates.length > 0 ? candidates[0].uid : null;
+
+  const opsByBook = {};
+  const nextAutoBlueUids = [];
+  const allItems = [...stories, ...summaries];
+
+  allItems.forEach((item) => {
+    // 手动蓝灯条目完全跳过：既不升级也不降级
+    if (manualBlueUids.includes(item.uid)) return;
+
     const strategy = item.strategy || {};
-    const autoManaged = strategy[AUTO_BLUE_STRATEGY_FLAG] === true;
-    const inCurrentMode = matchSimpTradMode(item.simpTrad, mode);
-    const shouldAutoBlue = inCurrentMode && isAutoBlueKeywordHit(item, displayText);
+    const isAutoBlueNow = autoBlueUids.includes(item.uid);
     let nextStrategy = null;
 
-    if (strategy.type === "constant") {
-      if (autoManaged && (!item.enabled || !shouldAutoBlue)) {
-        nextStrategy = { ...strategy, type: "selective" };
-        delete nextStrategy[AUTO_BLUE_STRATEGY_FLAG];
+    if (item.uid === keepUid) {
+      // 本轮唯一保留的自动蓝灯
+      nextAutoBlueUids.push(item.uid);
+      if (strategy.type !== "constant") {
+        nextStrategy = { ...strategy, type: "constant" };
       }
-    } else if (shouldAutoBlue) {
-      nextStrategy = {
-        ...strategy,
-        type: "constant",
-        [AUTO_BLUE_STRATEGY_FLAG]: true,
-      };
-    } else if (autoManaged) {
-      nextStrategy = { ...strategy };
-      delete nextStrategy[AUTO_BLUE_STRATEGY_FLAG];
+    } else if (isAutoBlueNow) {
+      // 上一轮自动开的，本轮不再保留 -> 降级回 selective
+      if (strategy.type === "constant") {
+        nextStrategy = { ...strategy, type: "selective" };
+      }
     }
 
     if (!nextStrategy) return;
@@ -570,24 +610,51 @@ async function syncAutoBlueStrategies(localData, displayText) {
   for (const bookName of bookNames) {
     await applyStrategyChanges(bookName, opsByBook[bookName], true);
   }
-  return bookNames.length > 0;
+
+  const changed = bookNames.length > 0 || autoBlueUids.join(",") !== nextAutoBlueUids.join(",");
+  autoBlueUids = nextAutoBlueUids;
+  if (changed) await saveAutoBlueUids();
+  return changed;
 }
 
 async function toggleStrategy(bookName, uid) {
   try {
-    await updateWorldbookWith(
-      bookName,
-      (entries) =>
-        entries.map((e) => {
-          if (e.uid !== uid) return e;
-          const currentType = e.strategy?.type || "selective";
-          const newType = currentType === "constant" ? "selective" : "constant";
-          const nextStrategy = { ...e.strategy, type: newType };
-          delete nextStrategy[AUTO_BLUE_STRATEGY_FLAG];
-          return { ...e, strategy: nextStrategy };
-        }),
-      { render: "immediate" },
-    );
+    // 两态切换：自动(绿灯/自动蓝灯) ↔ 常驻蓝灯(手动)
+    const isManualBlue = manualBlueUids.includes(uid);
+
+    if (!isManualBlue) {
+      // 当前是自动(绿灯或自动蓝灯) -> 切成常驻蓝灯
+      // 若当前是绿灯，需把 strategy 改成 constant；若已是自动蓝灯(constant)，strategy 不变
+      await updateWorldbookWith(
+        bookName,
+        (entries) =>
+          entries.map((e) => {
+            if (e.uid !== uid) return e;
+            const currentType = e.strategy?.type || "selective";
+            if (currentType === "constant") return e; // 已是 constant，strategy 不变
+            return { ...e, strategy: { ...e.strategy, type: "constant" } };
+          }),
+        { render: "immediate" },
+      );
+      // 从自动蓝灯移出，加入手动蓝灯
+      autoBlueUids = autoBlueUids.filter((x) => x !== uid);
+      if (!manualBlueUids.includes(uid)) manualBlueUids.push(uid);
+    } else {
+      // 当前是常驻蓝灯 -> 切回自动(绿灯)
+      await updateWorldbookWith(
+        bookName,
+        (entries) =>
+          entries.map((e) => {
+            if (e.uid !== uid) return e;
+            return { ...e, strategy: { ...e.strategy, type: "selective" } };
+          }),
+        { render: "immediate" },
+      );
+      // 从手动蓝灯移出（回到绿灯，不加入自动蓝灯——自动蓝灯由剧情显示变量驱动）
+      manualBlueUids = manualBlueUids.filter((x) => x !== uid);
+    }
+    await saveAutoBlueUids();
+
     toastr.success("触发策略已切换");
     setTimeout(() => {
       loadDataAndRender();
@@ -1788,6 +1855,18 @@ async function masterLoop() {
   try {
     const scanText = await getFullContextVar();
     const displayText = await getStoryDisplayText();
+    // 首次进入：清理残留自动蓝灯（constant 但无记录的）
+    if (!autoBlueInitDone) {
+      autoBlueInitDone = true;
+      const cleaned = await cleanupResidualAutoBlue(data);
+      if (cleaned) {
+        const scanRes0 = await scanAndPairEntries();
+        if (scanRes0.success) {
+          currentData = { pairs: scanRes0.pairs, stories: scanRes0.stories, summaries: scanRes0.summaries };
+          data = currentData;
+        }
+      }
+    }
     const autoBlueChanged = await syncAutoBlueStrategies(data, displayText);
     if (autoBlueChanged) {
       const scanRes = await scanAndPairEntries();
@@ -2209,7 +2288,7 @@ function createSwitcherPanel() {
     );
   });
 
-  $("#wb-toggle-auto").on("click", function () {
+  $("#wb-toggle-auto").on("click", async function () {
     SWITCHER_STATE.autoMode = !SWITCHER_STATE.autoMode;
     saveSettings();
     $(this).text(SWITCHER_STATE.autoMode ? "🔄 自动: ON" : "🔄 自动: OFF");
@@ -2233,6 +2312,37 @@ function createSwitcherPanel() {
       toastr.info("自动模式已开启");
       masterLoop();
     } else {
+      // 关闭自动模式：自动开的蓝灯全部转回绿灯，手动蓝灯不动
+      try {
+        const stories = currentData.stories || [];
+        const summaries = currentData.summaries || [];
+        const allItems = [...stories, ...summaries];
+        const opsByBook = {};
+        allItems.forEach((item) => {
+          const strategy = item.strategy || {};
+          if (strategy.type === "constant" && autoBlueUids.includes(item.uid)) {
+            const nextStrategy = { ...strategy, type: "selective" };
+            if (!opsByBook[item.bookName]) opsByBook[item.bookName] = [];
+            opsByBook[item.bookName].push({ uid: item.uid, strategy: nextStrategy });
+          }
+        });
+        const bookNames = Object.keys(opsByBook);
+        for (const bookName of bookNames) {
+          await applyStrategyChanges(bookName, opsByBook[bookName], true);
+        }
+        if (autoBlueUids.length > 0) {
+          autoBlueUids = [];
+          await saveAutoBlueUids();
+        }
+        if (bookNames.length > 0) {
+          const scanRes = await scanAndPairEntries();
+          if (scanRes.success) {
+            currentData = { pairs: scanRes.pairs, stories: scanRes.stories, summaries: scanRes.summaries };
+          }
+          refreshFloatingWindowContent();
+          refreshUIIfOpen();
+        }
+      } catch (e) { console.error("关闭自动模式清理蓝灯失败:", e); }
       toastr.info("自动模式已关闭");
     }
   });
@@ -2788,25 +2898,20 @@ async function renderListStories() {
     const type = item.strategy?.type || "selective";
     const stState = getStoryActivationState(item, scanText, displayText);
     const isActive = stState.active;
-    // 策略按钮：手动蓝灯=🔵常驻，自动蓝灯=🔷自动，绿灯=🟢触
+    // 策略按钮：两态（蓝灯=🔵常驻 / 绿灯=🟢触），左侧图标三态区分自动/手动/绿灯
+    // 按钮三态显示：常驻蓝灯(🔵) / 自动蓝灯(🔷) / 绿灯(🟢)；点击为两态切换(自动↔常驻)
     const strategyBtnText =
-      stState.mode === "manualBlue"
-        ? "🔵常驻"
-        : stState.mode === "autoBlue"
-          ? "🔷自动"
-          : "🟢触";
+      stState.mode === "manualBlue" ? "🔵常驻"
+        : stState.mode === "autoBlue" ? "🔷自动"
+        : "🟢触";
     const strategyBtnColor =
-      stState.mode === "manualBlue"
-        ? "rgba(66,153,225,0.2)"
-        : stState.mode === "autoBlue"
-          ? "rgba(79,209,224,0.2)"
-          : "rgba(72,187,120,0.2)";
+      stState.mode === "manualBlue" ? "rgba(66,153,225,0.2)"
+        : stState.mode === "autoBlue" ? "rgba(79,209,224,0.2)"
+        : "rgba(72,187,120,0.2)";
     const strategyBtnTextColor =
-      stState.mode === "manualBlue"
-        ? "#63b3ed"
-        : stState.mode === "autoBlue"
-          ? "#4fd1e0"
-          : "#9ae6b4";
+      stState.mode === "manualBlue" ? "#63b3ed"
+        : stState.mode === "autoBlue" ? "#4fd1e0"
+        : "#9ae6b4";
     const activeIcon =
       stState.mode === "manualBlue"
         ? "🔵 "
@@ -2878,23 +2983,17 @@ async function renderListSummaries() {
     const stState = getStoryActivationState(item, scanText, displayText);
     const isActive = stState.active;
     const strategyBtnText =
-      stState.mode === "manualBlue"
-        ? "🔵常驻"
-        : stState.mode === "autoBlue"
-          ? "🔷自动"
-          : "🟢触";
+      stState.mode === "manualBlue" ? "🔵常驻"
+        : stState.mode === "autoBlue" ? "🔷自动"
+        : "🟢触";
     const strategyBtnColor =
-      stState.mode === "manualBlue"
-        ? "rgba(66,153,225,0.2)"
-        : stState.mode === "autoBlue"
-          ? "rgba(79,209,224,0.2)"
-          : "rgba(72,187,120,0.2)";
+      stState.mode === "manualBlue" ? "rgba(66,153,225,0.2)"
+        : stState.mode === "autoBlue" ? "rgba(79,209,224,0.2)"
+        : "rgba(72,187,120,0.2)";
     const strategyBtnTextColor =
-      stState.mode === "manualBlue"
-        ? "#63b3ed"
-        : stState.mode === "autoBlue"
-          ? "#4fd1e0"
-          : "#9ae6b4";
+      stState.mode === "manualBlue" ? "#63b3ed"
+        : stState.mode === "autoBlue" ? "#4fd1e0"
+        : "#9ae6b4";
     const activeIcon =
       stState.mode === "manualBlue"
         ? "🔵 "
@@ -2967,7 +3066,7 @@ function loadSettings() {
 
 $(() => {
   loadSettings();
-  loadWbUiDarkMode().then(() => createFloatingWindow());
+  loadWbUiDarkMode().then(() => loadAutoBlueUids()).then(() => createFloatingWindow());
   if (typeof appendInexistentScriptButtons === "function") {
     appendInexistentScriptButtons([
       { name: SWITCHER_CONFIG.buttonName, visible: true },
