@@ -406,7 +406,7 @@ function syncInjections(data) {
 // ==========================================
 // 大小模式状态（参照 WorldInfoController.js 的 floatSizeMode 机制）
 // 缩放采用 JS 逐值计算尺寸，避免 CSS zoom/transform:scale 导致 jQuery UI draggable 坐标错乱
-let UI_SIZE_MODE = 'small';        // 'small' | 'large' (large = 1.5x)
+let UI_SIZE_MODE = 'large';        // 'small' | 'large' (large = 1.5x)
 let UI_POS = { top: '100px', right: '20px' };  // 悬浮窗位置状态（拖动后持久化）
 let UI_EXTRA_EXPANDED = false;     // 额外信息栏展开状态
 let UI_DARK_MODE = true;          // 深色/浅色模式 (true=深色 / false=浅色)，存全局变量 wuwa_story_ui_dark

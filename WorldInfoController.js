@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @name WuWa 世界书控制 (变量驱动+梗概版)
  * @description v4.0.3 集成角色Pro/Lite、剧情(✍️)、梗概(🎬️)控制。优化了过渡期扫描和悬浮窗显示。
  * @version 4.0.3
@@ -43,7 +43,7 @@ let SWITCHER_STATE = {
   floatVisible: true,
   floatPos: { top: "80px", left: "20px" },
   simpTradMode: "simp",
-  floatSizeMode: "small",
+  floatSizeMode: "large",
   uiDarkMode: true,
 };
 
@@ -271,7 +271,7 @@ function getStoryActivationState(entry, scanText, displayText) {
       return { active: true, mode: "autoBlue" };
     return { active: true, mode: "manualBlue" };
   }
-  if (checkAutoBlueActivation(entry, displayText))
+  if (SWITCHER_STATE.autoMode && checkAutoBlueActivation(entry, displayText))
     return { active: true, mode: "autoBlue" };
   if (checkStoryActivation(entry, scanText))
     return { active: true, mode: "green" };
@@ -1775,8 +1775,12 @@ let masterLoopTimer = null;
 let lastActiveStoryIds = "";
 
 async function masterLoop() {
-  if (!SWITCHER_STATE.autoMode) return;
   let data = currentData;
+  // 【修复】即使关闭自动模式，悬浮窗状态也要随剧情/手动开关刷新
+  if (!SWITCHER_STATE.autoMode) {
+    await floatScanAndRefresh(data);
+    return;
+  }
   if (!data.pairs || data.pairs.length === 0) {
     const scanRes = await scanAndPairEntries();
     if (scanRes.success) {
@@ -1879,6 +1883,25 @@ async function masterLoop() {
         data = currentData;
       }
     }
+    await floatScanAndRefresh(data, scanText, displayText);
+  } catch (e) {
+    console.error("Loop check failed", e);
+  }
+}
+
+// 【修复】悬浮窗状态刷新：自动模式关闭时也由 masterLoop 调用，确保手动开关/剧情变化能即时反映
+async function floatScanAndRefresh(data, scanText, displayText) {
+  try {
+    if (!scanText) scanText = await getFullContextVar();
+    if (!displayText) displayText = await getStoryDisplayText();
+    if (!data || !data.stories || !data.summaries) {
+      // 手动模式下 currentData 可能为空，补扫一次
+      const scanRes = await scanAndPairEntries();
+      if (scanRes.success) {
+        currentData = { pairs: scanRes.pairs, stories: scanRes.stories, summaries: scanRes.summaries };
+        data = currentData;
+      } else return;
+    }
     const _mode = SWITCHER_STATE.simpTradMode;
     const activeStories = data.stories.filter(
       (s) =>
@@ -1906,7 +1929,7 @@ async function masterLoop() {
       refreshUIIfOpen();
     }
   } catch (e) {
-    console.error("Loop check failed", e);
+    console.error("Float scan refresh failed", e);
   }
 }
 
@@ -2761,6 +2784,9 @@ function renderListChars() {
       }
       masterLoop();
       loadDataAndRender();
+    } else {
+      // 【修复】手动模式下开关 Pro 也即时刷新悬浮窗
+      await masterLoop();
     }
   });
 
@@ -2814,7 +2840,8 @@ function renderListChars() {
       .closest(".wb-item-row")
       .find(".wb-btn-lite")
       .css({ background: SWITCHER_CONFIG.colors.lite, color: "white" });
-    if (SWITCHER_STATE.autoMode) masterLoop();
+    // [修复] 手动模式下开关 Lite 也即时刷新悬浮窗；自动模式下 masterLoop 内部照常处理
+    masterLoop();
   });
 
   $(".wb-btn-virgin").on("click", async function () {
