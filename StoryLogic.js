@@ -3,7 +3,7 @@
  * @description 适配了“即将进行的下一个事件节点”变量。
  * @description ★ 修改：数据源已解耦，现在强制读取全局 WuWaShared 数据，不再硬编码剧情文本。
  * @description ★ 新增：下拉框版本选择、后日谈快捷跳转、生命周期自动清理、后日谈推进警告。
- * @description ★ v3.5.0：UI 重设计(小模式174px/毛玻璃透明底/剧情区块+图标按钮+网格信息卡，参照StoryUI_Draft)；大小切换按钮(📐/📏,1.5x，参照WorldInfoController逐值缩放避免拖拽坐标错乱)；额外信息栏(楼层/后日谈/过渡/剧情权重)默认折叠；按钮文字改为"推进至下一章节"/"强制进入后日谈"。
+ * @description ★ v3.5.0：UI 重设计(小模式174px/毛玻璃透明底/剧情区块+图标按钮+网格信息卡，参照StoryUI_Draft)；大小切换按钮(📐/📏,1.5x，参照WorldInfoController逐值缩放避免拖拽坐标错乱)；额外信息栏(楼层/后日谈/过渡/剧情权重)默认折叠；按钮文字改为"推进至下一章节"/"强制切换后日谈"。
  * @version 3.5.0
  */
 
@@ -609,7 +609,7 @@ function createOrUpdateUI(data) {
                 <div class="btns">
                     <div class="row">
                         <button class="btn" id="btn-advance"><span class="bi">▶</span><span class="bt">推进至<br>下一章节</span></button>
-                        <button class="btn" id="btn-toggle-ps"><span class="bi">🔁</span><span class="bt">强制进入<br>后日谈</span></button>
+                        <button class="btn" id="btn-toggle-ps"><span class="bi">🔁</span><span class="bt">强制切换<br>后日谈</span></button>
                     </div>
                     <button class="btn danger btn-full" id="btn-reset">↺ 撤销/重置状态</button>
                 </div>
