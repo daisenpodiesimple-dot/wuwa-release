@@ -440,7 +440,7 @@ let currentChatChar = null;
             "达妮娅": {
                 name: "达妮娅",
                 avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/daniya.webp",
-                signature: "好困……没事请不要找我。",
+                signature: "麻烦的事情明天再说，如果不麻烦的话……最好也明天哦~",
                 plotWeight: 3303
             },
             "露西": {
@@ -452,7 +452,7 @@ let currentChatChar = null;
             "丽贝卡": {
                 name: "丽贝卡",
                 avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/libeika.webp",
-                signature: "沉迷涂鸦创作，不接受任何审美指点。觉得难看？给我憋着！",
+                signature: "【系统提示：该签名含敏感词汇，已被屏蔽】",
                 plotWeight: 3401
             },
             "IRIS": {
