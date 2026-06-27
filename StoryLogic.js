@@ -427,6 +427,22 @@ async function saveUiDarkMode() {
     } catch(e) {}
 }
 
+// 读取大小模式（global 变量 wuwa_story_ui_size，跨会话持久）
+async function loadUiSizeMode() {
+    try {
+        const g = await getVariables({ type: 'global' });
+        if (g && g.wuwa_story_ui_size !== undefined) {
+            UI_SIZE_MODE = g.wuwa_story_ui_size === 'large' ? 'large' : 'small';
+        }
+    } catch(e) {}
+}
+// 写入大小模式
+async function saveUiSizeMode() {
+    try {
+        await updateVariablesWith(v => { _.set(v, 'wuwa_story_ui_size', UI_SIZE_MODE); return v; }, { type: 'global' });
+    } catch(e) {}
+}
+
 const UI_ID = 'wuwa-story-ui';
 
 // 根据缩放因子生成样式；sc=1 小模式, sc=1.5 大模式
@@ -746,6 +762,7 @@ function createOrUpdateUI(data) {
 // 大小切换：销毁旧 DOM 并重新创建（位置/展开状态从全局变量恢复）
 function rebuildStoryUI() {
     UI_SIZE_MODE = UI_SIZE_MODE === 'large' ? 'small' : 'large';
+    saveUiSizeMode();
     $(`#${UI_ID}`).remove();
     $(`#style_${UI_ID}`).remove();
     // 用缓存数据直接填充，避免切换时显示“加载中”和重新拉取
@@ -956,6 +973,7 @@ $(async () => {
         
         eventOn(btnEvent, async () => {
             await loadUiDarkMode();
+            await loadUiSizeMode();
             const $ui = $(`#${UI_ID}`);
             if ($ui.length === 0) {
                 createOrUpdateUI(null); 
