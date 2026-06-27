@@ -716,6 +716,10 @@ let currentChatChar = null;
                 if (typeof config.hide_injected_text === 'undefined') config.hide_injected_text = false;
                 if (typeof config.private_msg_count_max === 'undefined') config.private_msg_count_max = 2;
                 if (typeof config.group_msg_count_max === 'undefined') config.group_msg_count_max = 2;
+                if (typeof config.msg_count_min === 'undefined') config.msg_count_min = 1;
+                // 兼容：连发上下限越界保护（老存档可能 min>max）
+                if (config.msg_count_min > config.private_msg_count_max) config.msg_count_min = config.private_msg_count_max;
+                if (config.msg_count_min > config.group_msg_count_max) config.msg_count_min = config.group_msg_count_max;
                 if (typeof config.group_responder_max === 'undefined') config.group_responder_max = 2;
                 if (typeof config.inject_mode === 'undefined') config.inject_mode = 'chat'; // 【新增】默认为正文注入
                 if (typeof config.fx_custom_api === 'undefined') config.fx_custom_api = { enabled: false, apiurl: '', key_enc: '', model: '', source: 'openai', temperature: 1 };
@@ -725,12 +729,23 @@ let currentChatChar = null;
         return { 
             retain_raw_count: 10, exclude_summary_count: 0, summary_chunk_size: 10, 
             anti_mechanical: true, hide_injected_text: false, inject_mode: 'chat', // 【新增】
-            private_msg_count_max: 2, group_msg_count_max: 2, group_responder_max: 2 ,
+            private_msg_count_max: 2, group_msg_count_max: 2, group_responder_max: 2 , msg_count_min: 1 ,
             fx_custom_api: { enabled: false, apiurl: '', key_enc: '', model: '', source: 'openai', temperature: 1 } 
         };
     }
     async function saveFxGlobalConfig(config) { 
         await insertOrAssignVariables({ fx_global_config: config }, { type: 'global' }); 
+    }
+
+    // 计算单次连发消息条数：在 [下限, 上限] 之间随机，保证 下限<=上限，且下限>=1。
+    // isGroup: true 用群聊上限，false 用私聊上限（两者通常被 UI 同步成同值，但保留分开以兼容老存档）。
+    function calcMsgCount(config, isGroup) {
+        let max = isGroup ? config.group_msg_count_max : config.private_msg_count_max;
+        let min = config.msg_count_min;
+        if (typeof max !== 'number' || isNaN(max) || max < 1) max = 2;
+        if (typeof min !== 'number' || isNaN(min) || min < 1) min = 1;
+        if (min > max) min = max; // 越界保护：下限不可能大于上限
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     // 【新增】聊天记忆总结数据库
@@ -1825,7 +1840,7 @@ ${historyText}
                             payload: {
                                 charKey: charKey, currentSpeaker: m, gameTime: getCurrentGameTime(), groupInfo: groupInfo,
                                 emojiListText: emojiListText, 
-                                msgCount: Math.floor(Math.random() * config.group_msg_count_max) + 1, // 同步读取群聊连发配置
+                                msgCount: calcMsgCount(config, true), // 同步读取群聊连发配置
                                 hasSpoken: hasSpoken
                             }
                         });
@@ -2138,7 +2153,7 @@ ${historyText}
             payload: {
                 charKey: charKey, userName: userName, gameTime: gameTime,
                 displayName: getDisplayName(charKey), charSignature: FEIXUN_DB.characters[charKey]?.signature || '无',
-                msgCount: Math.floor(Math.random() * config.private_msg_count_max) + 1,
+                msgCount: calcMsgCount(config, false),
                 emojiListText: Object.keys(FEIXUN_DB.emojis).map(k => `[表情: ${fxNormalizeEmojiName(k)}]`).join('、')
             }
         });
@@ -2197,7 +2212,7 @@ ${historyText}
                 payload: {
                     charKey: groupId, currentSpeaker: speaker, gameTime: gameTime, groupInfo: group,
                     emojiListText: Object.keys(FEIXUN_DB.emojis).map(k => `[表情: ${fxNormalizeEmojiName(k)}]`).join('、'),
-                    msgCount: Math.floor(Math.random() * config.group_msg_count_max) + 1, // 读取群聊单人连发上限
+                    msgCount: calcMsgCount(config, true), // 读取群聊单人连发上限
                     hasSpoken: hasSpoken
                 }
             });
@@ -2722,7 +2737,7 @@ ${historyText}
         <div class="fx-modal" id="fx-settings-modal">
             <div class="fx-modal-content" style="width: 340px; max-height: 85vh; display: flex; flex-direction: column;">
                 <div class="fx-modal-header"><i class="fa-solid fa-gear"></i> 终端全局设置</div>
-<div class="fx-modal-body" style="gap: 15px; flex: 1; overflow-y: auto;"><div style="font-size: 12px; color: var(--fx-time); margin-bottom: 5px;">通过滑动调整飞讯记忆机制的阈值。</div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>保留最新的X条原文（其余消息隐藏）</span> <span id="val-retain" style="color:#4a9eff; font-weight:bold;">10</span></div><input type="range" id="fx-cfg-retain" min="5" max="20" value="10" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>保留X条消息不总结</span> <span id="val-exclude" style="color:#4a9eff; font-weight:bold;">5</span></div><input type="range" id="fx-cfg-exclude" min="0" max="20" value="5" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>每批次总结X条消息</span> <span id="val-chunk" style="color:#4a9eff; font-weight:bold;">10</span></div><input type="range" id="fx-cfg-chunk" min="5" max="20" value="10" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>私聊：单人连发消息上限</span> <span id="val-privmax" style="color:#4a9eff; font-weight:bold;">2</span></div><input type="range" id="fx-cfg-privmax" min="1" max="4" value="2" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>群聊：单人连发消息上限</span> <span id="val-grpmax" style="color:#4a9eff; font-weight:bold;">2</span></div><input type="range" id="fx-cfg-grpmax" min="1" max="4" value="2" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>群聊：并发响应人数上限</span> <span id="val-grpresp" style="color:#4a9eff; font-weight:bold;">2</span></div><input type="range" id="fx-cfg-grpresp" min="1" max="4" value="2" style="width:100%;"></div>
+<div class="fx-modal-body" style="gap: 15px; flex: 1; overflow-y: auto;"><div style="font-size: 12px; color: var(--fx-time); margin-bottom: 5px;">通过滑动调整飞讯记忆机制的阈值。</div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>保留最新的X条原文（其余消息隐藏）</span> <span id="val-retain" style="color:#4a9eff; font-weight:bold;">10</span></div><input type="range" id="fx-cfg-retain" min="5" max="20" value="10" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>保留X条消息不总结</span> <span id="val-exclude" style="color:#4a9eff; font-weight:bold;">5</span></div><input type="range" id="fx-cfg-exclude" min="0" max="20" value="5" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>每批次总结X条消息</span> <span id="val-chunk" style="color:#4a9eff; font-weight:bold;">10</span></div><input type="range" id="fx-cfg-chunk" min="5" max="20" value="10" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>连发消息上限（私聊/群聊通用）</span> <span id="val-msgmax" style="color:#4a9eff; font-weight:bold;">2</span></div><input type="range" id="fx-cfg-msgmax" min="1" max="5" value="2" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>连发消息下限（私聊/群聊通用）</span> <span id="val-msgmin" style="color:#4a9eff; font-weight:bold;">1</span></div><input type="range" id="fx-cfg-msgmin" min="1" max="5" value="1" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>群聊：并发响应人数上限</span> <span id="val-grpresp" style="color:#4a9eff; font-weight:bold;">2</span></div><input type="range" id="fx-cfg-grpresp" min="1" max="4" value="2" style="width:100%;"></div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                         <div style="font-size:13px; display:flex; flex-direction:column;">
                             <span>反机械化反数据</span>
@@ -3319,8 +3334,8 @@ async function executeCloseFeixun() {
                 p$('#fx-cfg-retain').val(cfg.retain_raw_count); p$('#val-retain').text(cfg.retain_raw_count);
                 p$('#fx-cfg-exclude').val(cfg.exclude_summary_count); p$('#val-exclude').text(cfg.exclude_summary_count);
                 p$('#fx-cfg-chunk').val(cfg.summary_chunk_size); p$('#val-chunk').text(cfg.summary_chunk_size);
-                p$('#fx-cfg-privmax').val(cfg.private_msg_count_max); p$('#val-privmax').text(cfg.private_msg_count_max);
-                p$('#fx-cfg-grpmax').val(cfg.group_msg_count_max); p$('#val-grpmax').text(cfg.group_msg_count_max);
+                p$('#fx-cfg-msgmax').val(cfg.private_msg_count_max); p$('#val-msgmax').text(cfg.private_msg_count_max);
+                p$('#fx-cfg-msgmin').val(cfg.msg_count_min); p$('#val-msgmin').text(cfg.msg_count_min);
                 p$('#fx-cfg-grpresp').val(cfg.group_responder_max); p$('#val-grpresp').text(cfg.group_responder_max);
                 p$('#fx-cfg-antimech').prop('checked', cfg.anti_mechanical);
                 p$('#fx-cfg-hideinject').prop('checked', !!cfg.hide_injected_text);
@@ -3337,8 +3352,10 @@ async function executeCloseFeixun() {
                     retain_raw_count: parseInt(p$('#fx-cfg-retain').val(), 10),
                     exclude_summary_count: parseInt(p$('#fx-cfg-exclude').val(), 10),
                     summary_chunk_size: parseInt(p$('#fx-cfg-chunk').val(), 10),
-                    private_msg_count_max: parseInt(p$('#fx-cfg-privmax').val(), 10),
-                    group_msg_count_max: parseInt(p$('#fx-cfg-grpmax').val(), 10),
+                    // 连发上限滑块同步写入私聊/群聊两个字段（兼容老存档结构，UI 合并为一个滑块）
+                    private_msg_count_max: parseInt(p$('#fx-cfg-msgmax').val(), 10),
+                    group_msg_count_max: parseInt(p$('#fx-cfg-msgmax').val(), 10),
+                    msg_count_min: parseInt(p$('#fx-cfg-msgmin').val(), 10),
                     group_responder_max: parseInt(p$('#fx-cfg-grpresp').val(), 10),
                     anti_mechanical: p$('#fx-cfg-antimech').is(':checked'),
                     hide_injected_text: p$('#fx-cfg-hideinject').is(':checked'),
@@ -3439,6 +3456,16 @@ async function executeCloseFeixun() {
                 const val = Math.max(minVal, Math.min(maxVal, parseInt(p$(this).val(), 10)));
                 p$(this).val(val);
                 p$(`#val-${this.id.split('-')[2]}`).text(val);
+                // 连发上下限联动：拖动上限时若低于下限，自动抬升下限；拖动下限时若高于上限，自动压低上限
+                if (this.id === 'fx-cfg-msgmax') {
+                    const minSlider = p$('#fx-cfg-msgmin');
+                    let minVal2 = parseInt(minSlider.val(), 10);
+                    if (minVal2 > val) { minSlider.val(val); p$('#val-msgmin').text(val); }
+                } else if (this.id === 'fx-cfg-msgmin') {
+                    const maxSlider = p$('#fx-cfg-msgmax');
+                    let maxVal2 = parseInt(maxSlider.val(), 10);
+                    if (maxVal2 < val) { maxSlider.val(val); p$('#val-msgmax').text(val); }
+                }
                 saveSettings();
             });
             // ====================================================
@@ -3930,7 +3957,7 @@ async function executeCloseFeixun() {
                     payload: {
                         charKey: groupId, currentSpeaker: speaker, gameTime: gameTime, groupInfo: group,
                         emojiListText: Object.keys(FEIXUN_DB.emojis).map(k => '[表情: ' + fxNormalizeEmojiName(k) + ']').join('、'),
-                        msgCount: Math.floor(Math.random() * config.group_msg_count_max) + 1,
+                        msgCount: calcMsgCount(config, true),
                         hasSpoken: [getPlayerName()]
                     }
                 });
