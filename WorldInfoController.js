@@ -74,6 +74,50 @@ async function saveWbUiDarkMode() {
   } catch (e) {}
 }
 
+// 读取悬浮窗大小模式（global 变量 wuwa_wb_ui_size，跨会话持久）
+async function loadWbUiSizeMode() {
+  try {
+    const g = await getVariables({ type: "global" });
+    if (g && g.wuwa_wb_ui_size !== undefined) {
+      SWITCHER_STATE.floatSizeMode = g.wuwa_wb_ui_size === "large" ? "large" : "small";
+    }
+  } catch (e) {}
+}
+// 写入悬浮窗大小模式
+async function saveWbUiSizeMode() {
+  try {
+    await updateVariablesWith(
+      (v) => {
+        _.set(v, "wuwa_wb_ui_size", SWITCHER_STATE.floatSizeMode);
+        return v;
+      },
+      { type: "global" },
+    );
+  } catch (e) {}
+}
+
+// 读取赛博朋克简繁模式（global 变量 wuwa_wb_simp_trad，跨会话/重导入持久）
+async function loadWbSimpTradMode() {
+  try {
+    const g = await getVariables({ type: "global" });
+    if (g && g.wuwa_wb_simp_trad !== undefined) {
+      SWITCHER_STATE.simpTradMode = g.wuwa_wb_simp_trad === "trad" ? "trad" : "simp";
+    }
+  } catch (e) {}
+}
+// 写入赛博朋克简繁模式
+async function saveWbSimpTradMode() {
+  try {
+    await updateVariablesWith(
+      (v) => {
+        _.set(v, "wuwa_wb_simp_trad", SWITCHER_STATE.simpTradMode);
+        return v;
+      },
+      { type: "global" },
+    );
+  } catch (e) {}
+}
+
 // 加载自动蓝灯/手动蓝灯 uid 列表（从全局变量）
 async function loadAutoBlueUids() {
   try {
@@ -421,7 +465,7 @@ async function scanAndPairEntries() {
 }
 
 // ==================== 简繁切换 ====================
-async function executeSimpTradSwitch(targetMode) {
+async function executeSimpTradSwitch(targetMode, silent = false) {
   try {
     let bookNames = [];
     try {
@@ -431,6 +475,7 @@ async function executeSimpTradSwitch(targetMode) {
       console.warn("无法获取角色世界书:", e);
     }
     if (bookNames.length === 0) {
+      if (silent) { console.warn("[WuWa 简繁] 无绑定世界书，跳过切换"); return; }
       toastr.error("未检测到绑定世界书");
       return;
     }
@@ -438,6 +483,7 @@ async function executeSimpTradSwitch(targetMode) {
     const targetBook = bookNames[0];
     const entries = await getWorldbook(targetBook);
     if (!entries || entries.length === 0) {
+      if (silent) { console.warn("[WuWa 简繁] 世界书为空，跳过切换"); return; }
       toastr.error("世界书为空");
       return;
     }
@@ -472,7 +518,7 @@ async function executeSimpTradSwitch(targetMode) {
     // 繁体模式：额外启用"游戏术语表"
     if (targetMode === "trad") {
       const termEntry = entries.find(
-        (e) => e.name.includes("游戏术语表") || e.name.includes("術語表"),
+        (e) => e.name.includes("游戏术语表") || e.name.includes("術語表") || e.name.includes("術語糾正"),
       );
       if (termEntry) {
         ops.push({ uid: termEntry.uid, enable: true });
@@ -483,7 +529,7 @@ async function executeSimpTradSwitch(targetMode) {
     } else {
       // 简体模式：关闭游戏术语表
       const termEntry = entries.find(
-        (e) => e.name.includes("游戏术语表") || e.name.includes("術語表"),
+        (e) => e.name.includes("游戏术语表") || e.name.includes("術語表") || e.name.includes("術語糾正"),
       );
       if (termEntry) {
         ops.push({ uid: termEntry.uid, enable: false });
@@ -493,9 +539,9 @@ async function executeSimpTradSwitch(targetMode) {
     if (ops.length > 0) {
       await applyChanges(targetBook, ops, true);
       const modeLabel = targetMode === "simp" ? "简体词条" : "繁體詞條";
-      toastr.success(`🌙 已切换至：${modeLabel}`);
+      if (!silent) toastr.success(`🌙 已切换至：${modeLabel}`);
     } else {
-      toastr.info("未找到需要切换的简繁词条");
+      if (!silent) toastr.info("未找到需要切换的简繁词条");
     }
 
     // 刷新 UI
@@ -1774,11 +1820,47 @@ async function logicScanFloorZero(localData) {
 let masterLoopTimer = null;
 let lastActiveStoryIds = "";
 
+// 🔤 简繁模式同步（独立函数）：用「術語糾正」词条开关状态作为世界书真实模式 ground truth，
+// 与 SWITCHER_STATE.simpTradMode 不一致时触发一次全量切换。一致则不动，不干扰普通词条的手动开关。
+// 供 masterLoop 在自动/非自动模式下都调用。
+async function cleanupSimpTradEntries() {
+  try {
+    // 用「術語糾正」词条的 enabled 作为世界书真实模式的 ground truth：开=繁体，关=简体
+    let actualMode = null;
+    try {
+      const charBooks = getCharWorldbookNames("current");
+      const myBook = charBooks && charBooks.primary;
+      if (myBook) {
+        const entries = await getWorldbook(myBook);
+        const termEntry = entries && entries.find((e) => e.name && e.name.includes("術語糾正"));
+        if (termEntry) actualMode = termEntry.enabled ? "trad" : "simp";
+      }
+    } catch (e) { /* 取不到就跳过本轮 */ }
+
+    const expectMode = SWITCHER_STATE.simpTradMode;
+    if (actualMode && actualMode !== expectMode) {
+      // 世界书真实模式与期望模式不一致（被重置/重导入导致串台），触发一次全量切换
+      console.log(`[WuWa 简繁] 🔄 检测到模式不一致(世界书=${actualMode === "simp" ? "简体" : "繁体"}, 期望=${expectMode === "simp" ? "简体" : "繁体"})，执行全量修正`);
+      await executeSimpTradSwitch(expectMode, true);
+    }
+
+    // 扫描一次供 masterLoop 后续逻辑用最新数据
+    const scanRes = await scanAndPairEntries();
+    return scanRes.success ? scanRes : null;
+  } catch (e) {
+    console.warn("[WuWa 简繁] 心跳清理失败:", e);
+    return null;
+  }
+}
+
 async function masterLoop() {
   let data = currentData;
   // 【修复】即使关闭自动模式，悬浮窗状态也要随剧情/手动开关刷新
   if (!SWITCHER_STATE.autoMode) {
     await floatScanAndRefresh(data);
+    // 非自动模式也做简繁开关修正（世界书重置/重导入后自动恢复）
+    const cleanRes = await cleanupSimpTradEntries();
+    if (cleanRes) currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
     return;
   }
   if (!data.pairs || data.pairs.length === 0) {
@@ -1793,35 +1875,11 @@ async function masterLoop() {
     } else return;
   }
 
-  // 🔤 简繁清理：每轮心跳确保非当前模式的词条保持关闭
-  const mode = SWITCHER_STATE.simpTradMode;
-  const cleanupOps = [];
-  data.pairs.forEach((p) => {
-    if (p.simpTrad === "simp" && mode === "trad") {
-      if (p.proEnabled && p.proUid)
-        cleanupOps.push({ uid: p.proUid, enable: false });
-      if (p.liteEnabled && p.liteUid)
-        cleanupOps.push({ uid: p.liteUid, enable: false });
-    }
-    if (p.simpTrad === "trad" && mode === "simp") {
-      if (p.proEnabled && p.proUid)
-        cleanupOps.push({ uid: p.proUid, enable: false });
-      if (p.liteEnabled && p.liteUid)
-        cleanupOps.push({ uid: p.liteUid, enable: false });
-    }
-  });
-  if (cleanupOps.length > 0) {
-    await applyChanges(data.pairs[0].bookName, cleanupOps, true);
-    // 刷新 data 以反映清理后的状态
-    const scanRes = await scanAndPairEntries();
-    if (scanRes.success) {
-      currentData = {
-        pairs: scanRes.pairs,
-        stories: scanRes.stories,
-        summaries: scanRes.summaries,
-      };
-      data = currentData;
-    }
+  // 🔤 简繁清理：确保非当前模式的词条保持关闭（已是正确状态则什么都不做）
+  const cleanRes = await cleanupSimpTradEntries();
+  if (cleanRes) {
+    currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
+    data = currentData;
   }
 
   // 🔒 如果输入框不再包含开场指令，释放输入覆盖标记
@@ -2017,6 +2075,7 @@ function createFloatingWindow() {
     SWITCHER_STATE.floatSizeMode =
       SWITCHER_STATE.floatSizeMode === "large" ? "small" : "large";
     saveSettings();
+    saveWbUiSizeMode();
     const isLarge = SWITCHER_STATE.floatSizeMode === "large";
     $(this).text(isLarge ? "📏" : "📐");
     $(this).attr("title", isLarge ? "切换为小悬浮窗" : "切换为大悬浮窗 (1.5x)");
@@ -2267,6 +2326,7 @@ function createSwitcherPanel() {
 
     SWITCHER_STATE.simpTradMode = newMode;
     saveSettings();
+    saveWbSimpTradMode();
     $(this).text(newLabel);
 
     // 执行简繁词条批量切换
@@ -2299,6 +2359,7 @@ function createSwitcherPanel() {
     SWITCHER_STATE.floatSizeMode =
       SWITCHER_STATE.floatSizeMode === "large" ? "small" : "large";
     saveSettings();
+    saveWbUiSizeMode();
     const isLarge = SWITCHER_STATE.floatSizeMode === "large";
     // 重新创建悬浮窗以应用新的缩放
     createFloatingWindow();
@@ -3093,7 +3154,7 @@ function loadSettings() {
 
 $(() => {
   loadSettings();
-  loadWbUiDarkMode().then(() => loadAutoBlueUids()).then(() => createFloatingWindow());
+  loadWbUiDarkMode().then(() => loadWbUiSizeMode()).then(() => loadWbSimpTradMode()).then(() => loadAutoBlueUids()).then(() => createFloatingWindow());
   if (typeof appendInexistentScriptButtons === "function") {
     appendInexistentScriptButtons([
       { name: SWITCHER_CONFIG.buttonName, visible: true },
