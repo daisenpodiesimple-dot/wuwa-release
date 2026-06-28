@@ -120,6 +120,8 @@ export const Schema = z.object({
 
     // 私有派生变量 - 由逻辑控制器计算，对AI只读
     _现场女性角色显示: z.record(z.string(), z.any()).readonly().optional(),
+    _精简模式女性角色显示: z.record(z.string(), z.any()).readonly().optional(),
+    _精简模式主角信息显示: z.any().readonly().optional(),
     _已知角色名单: z.array(z.string()).readonly().optional(),
 });
 
