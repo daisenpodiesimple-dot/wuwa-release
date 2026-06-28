@@ -473,6 +473,39 @@
         margin: 0;
     }
 
+    /* 行动界面设置区展开/收起动画 */
+    .action-settings-body {
+        overflow: hidden;
+        max-height: 800px;
+        opacity: 1;
+        transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.35s ease;
+    }
+    .action-settings-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+        margin: 0;
+    }
+
+    /* 底部导航行动栏收起动画 */
+    .nav-btn-action {
+        max-width: 25%; /* 展开态起点值，配合 flex:1 不影响实际宽度；collapsed 态收到 0 触发过渡动画 */
+        transition: max-width 0.35s ease, opacity 0.25s ease, padding 0.35s ease, margin 0.35s ease;
+        overflow: hidden;
+    }
+    .tide-nav.action-disabled .nav-btn-action {
+        max-width: 0;
+        flex: 0 0 0 !important;
+        opacity: 0;
+        padding-left: 0;
+        padding-right: 0;
+        margin: 0;
+        border-top-color: transparent !important;
+        pointer-events: none;
+    }
+
+    /* MVU变量简约模式 */
+    body.mvu-minimal .mvu-minimal-hide { display: none !important; }
+
     .char-portrait-layer {
         position: absolute;
         top: 0; bottom: 44px; left: 0; right: 0;
@@ -745,6 +778,8 @@
     let isDarkMode = true;
     // 牵绊界面立绘显示开关（默认开启）
     let showCharPortrait = true;
+    let actionUiEnabled = true; // 行动界面总开关（存全局变量，默认开）
+    let minimalMode = false; // MVU变量简约模式（存全局变量，默认关）
     let portraitFitMode = 'height'; // 'height' 或 'width'，立绘展示方式
     let viewportHeight = 380; // 垂直边距（展开高度），默认 380px
     let portraitOverlayOpacity = 50;
@@ -1111,6 +1146,8 @@
             if (typeof s.isDarkMode === 'boolean') isDarkMode = s.isDarkMode;
             if (typeof s.isInjectionEnabled === 'boolean') isInjectionEnabled = s.isInjectionEnabled;
             if (typeof s.showCharPortrait === 'boolean') showCharPortrait = s.showCharPortrait;
+            if (typeof s.actionUiEnabled === 'boolean') actionUiEnabled = s.actionUiEnabled;
+            if (typeof s.minimalMode === 'boolean') minimalMode = s.minimalMode;
             if (s.portraitFitMode === 'height' || s.portraitFitMode === 'width') portraitFitMode = s.portraitFitMode;
             if (typeof s.viewportHeight === 'number' && s.viewportHeight >= 190 && s.viewportHeight <= 760) viewportHeight = s.viewportHeight;
             if (typeof s.portraitOverlayOpacity === 'number' && s.portraitOverlayOpacity >= 0 && s.portraitOverlayOpacity <= 100) portraitOverlayOpacity = s.portraitOverlayOpacity;
@@ -1124,7 +1161,7 @@
             // 使用 replaceVariables 完全替换，避免 insertOrAssignVariables 的深度合并导致删除不生效
             if (typeof getVariables !== 'function' || typeof replaceVariables !== 'function') return;
             const vars = getVariables({ type: 'global' });
-            vars[SETTINGS_KEY] = { optTagOpen, optTagClose, isDarkMode, isInjectionEnabled, showCharPortrait, portraitFitMode, viewportHeight, portraitOverlayOpacity, portraitUiOffset, customPortraitConfig: { ...customPortraitConfig }, customAddedPortraits: { ...customAddedPortraits } };
+            vars[SETTINGS_KEY] = { optTagOpen, optTagClose, isDarkMode, isInjectionEnabled, showCharPortrait, actionUiEnabled, minimalMode, portraitFitMode, viewportHeight, portraitOverlayOpacity, portraitUiOffset, customPortraitConfig: { ...customPortraitConfig }, customAddedPortraits: { ...customAddedPortraits } };
             replaceVariables(vars, { type: 'global' });
         } catch (e) { console.warn('[StatusBar] saveSettings failed:', e); }
     }
@@ -1285,6 +1322,36 @@
         saveSettings();
     };
 
+    // 行动界面总开关：底部导航四栏↔三栏（纯 CSS 过渡）
+    function applyActionUiNav() {
+        $('.tide-nav').toggleClass('action-disabled', !actionUiEnabled);
+    }
+    window.toggleActionUi = function(e) {
+        if(e) e.stopPropagation();
+        actionUiEnabled = !actionUiEnabled;
+        const btn = $('#action-ui-toggle-btn');
+        if (actionUiEnabled) btn.addClass('active'); else btn.removeClass('active');
+        $('.action-settings-body').toggleClass('collapsed', !actionUiEnabled);
+        applyActionUiNav();
+        if (!actionUiEnabled && $('.tab-page.active').attr('id') === 'page-opt') {
+            switchTab('page-user', $('.nav-btn').first()[0], 'theme-blue');
+        }
+        tabRendered['page-opt'] = false;
+        saveSettings();
+    };
+    // MVU变量简约模式：切换 body.mvu-minimal 类，配合 .mvu-minimal-hide 隐藏项
+    function applyMinimal() {
+        if (minimalMode) document.body.classList.add('mvu-minimal');
+        else document.body.classList.remove('mvu-minimal');
+    }
+    window.toggleMinimalMode = function(e) {
+        if(e) e.stopPropagation();
+        minimalMode = !minimalMode;
+        const btn = $('#minimal-toggle-btn');
+        if (minimalMode) btn.addClass('active'); else btn.removeClass('active');
+        applyMinimal();
+        saveSettings();
+    };
     // 缓存所有立绘图片按钮
     window.cacheAllPortraitsBtn = async function(e) {
         if (e) e.stopPropagation();
@@ -2130,9 +2197,9 @@
                     <div class="row"><span class="label">主角性别</span><span class="val editable-text" title="点击切换性别" onclick="editUserGender()">${uGender}</span></div>
                     <div class="row"><span class="label">是否漂泊者</span><span class="val editable-text" style="color:${isDrifter==='是'?'var(--accent-color)':'inherit'}" title="点击切换" onclick="editUserRover()">${isDrifter}</span></div>
                     <div class="row"><span class="label">身份设定</span><span class="val editable-text" title="点击修改身份" onclick="editUserField('身份与额外设定')">${safe(u.身份与额外设定)}</span></div>
-                    <div class="row"><span class="label">当前状态</span><span class="val editable-text" title="点击修改状态" onclick="editUserField('当前状态')">${safe(u.当前状态)}</span></div>
+                    <div class="row mvu-minimal-hide"><span class="label">当前状态</span><span class="val editable-text" title="点击修改状态" onclick="editUserField('当前状态')">${safe(u.当前状态)}</span></div>
                     <div class="row"><span class="label">性爱状态</span><span class="val editable-text" style="color:${isUSex?'#f472b6':'#4ade80'}" title="点击切换性爱状态" onclick="toggleUserSexStatus()">${isUSex?'🔞 性爱中':'✅ 正常'}</span></div>
-                    <div class="row"><span class="label">当前穿着</span><span class="val editable-text" title="点击修改穿着" onclick="editUserField('当前穿着')">${safe(u.当前穿着)}</span></div>
+                    <div class="row mvu-minimal-hide"><span class="label">当前穿着</span><span class="val editable-text" title="点击修改穿着" onclick="editUserField('当前穿着')">${safe(u.当前穿着)}</span></div>
                     <div class="row"><span class="label">NPC漂泊者</span><span class="val editable-text" title="点击修改NPC漂泊者" onclick="editNPCRover()">${npcStr}</span></div>
                 </div>
                 <div class="data-block">
@@ -2144,11 +2211,11 @@
                     <div class="row"><span class="label">当前节点</span><span class="val editable-text" title="点击修改当前节点" onclick="editStoryVar('当前演绎事件节点', '当前节点')">${safe(sd.当前演绎事件节点)}</span></div>
                 </div>
             </div>
-            <div class="data-block">
+            <div class="data-block mvu-minimal-hide">
                 <div class="block-header">物品栏</div>
                 <div class="tag-list">${bagHtml}</div>
             </div>
-            <div class="data-block">
+            <div class="data-block mvu-minimal-hide">
                 <div class="block-header">人际关系网</div>
                 <div class="tag-list">${relHtml}</div>
             </div>
@@ -2209,7 +2276,7 @@
                 <div class="row"><span class="label">上一节点</span><span class="val editable-text" title="点击修改上一节点" onclick="editStoryVar('已完成的上一个事件节点', '上一节点')">${safe(sd.已完成的上一个事件节点)}</span></div>
                 <div class="row"><span class="label">终止条件</span><span class="val editable-text" title="点击修改终止条件" onclick="editStoryVar('章节终止条件', '章节终止条件')">${safe(sd.章节终止条件)}</span></div>
             </div>
-            <div class="data-block">
+            <div class="data-block mvu-minimal-hide">
                 <div class="block-header" style="display:flex; justify-content:space-between; align-items:baseline;">
                     <span>剧情触发器</span>
                     <div>
@@ -2219,7 +2286,7 @@
                 </div>
                 <div>${trigsHtml}</div>
             </div>
-            <div class="data-block">
+            <div class="data-block mvu-minimal-hide">
                 <div class="block-header" style="display:flex; justify-content:space-between; align-items:baseline;">
                     <span>暗线伏笔</span>
                     <div>
@@ -2261,7 +2328,7 @@
             const isHere = String(c.是否在场) === 'true';
             const opacityStyle = isHere ? '' : 'opacity:0.5;';
             
-            const btn = $(`<div class="char-pill ${isActive?'active':''}" style="${opacityStyle}">${isHere?'✦ ':''}${key}<span class="heart-icon">❤${c.好感度||0}</span></div>`);
+            const btn = $(`<div class="char-pill ${isActive?'active':''}" style="${opacityStyle}">${isHere?'✦ ':''}${key}<span class="heart-icon mvu-minimal-hide">❤${c.好感度||0}</span></div>`);
             
             // 点击时重新渲染当前选中的角色
             btn.on('click', function() { 
@@ -2319,27 +2386,27 @@
                         <span class="char-tool-btn" title="重置角色变量及状态" onclick="resetCharacter('${name}')">⟳</span>
                         <span class="char-tool-btn danger" title="彻底删除该角色数据" onclick="deleteCharacter('${name}')">✕</span>
                     </div>
-                    <div class="header-heart-container" style="margin-left:auto; display:flex; align-items:center;">
+                    <div class="header-heart-container mvu-minimal-hide" style="margin-left:auto; display:flex; align-items:center;">
                         ${(() => { const tag = getAttitudeTag(d.好感度); return `<span class="attitude-tag ${tag.cls}">${tag.text}</span>`; })()}
                         <div class="editable-heart" style="font-size:14px;color:var(--heart-color);font-weight:bold" title="点击修改好感度" onclick="editAffection('${name}')">❤ ${d.好感度||0}</div>
                     </div>
                 </div>
             </div>
-            <div class="psych-box">💭 ${extra.内心想法 || '（暂无心理活动）'}</div>
+            <div class="psych-box mvu-minimal-hide">💭 ${extra.内心想法 || '（暂无心理活动）'}</div>
 
             <div class="status-row">
                 <div class="status-badge clickable-badge ${isHere?'st-online':'st-offline'}" onclick="editCharPresence('${name}')" title="点击切换在场状态">${isHere?'🟢 当前在场':'⚫ 离线'}</div>
                 <div class="status-badge clickable-badge ${isSex?'st-sex':'st-offline'}" onclick="toggleCharSexStatus('${name}')" title="点击切换性爱状态">${isSex?'🔞 性爱进行中':'✅ 状态正常'}</div>
             </div>
 
-            <div class="basic-grid">
+            <div class="basic-grid mvu-minimal-hide">
                 <div class="basic-cell"><div class="bc-label">身高</div><div class="bc-val">${base.身高||'-'}</div></div>
                 <div class="basic-cell"><div class="bc-label">罩杯</div><div class="bc-val">${base.罩杯||'-'}</div></div>
                 <div class="basic-cell"><div class="bc-label">处女</div><div class="bc-val editable-text" style="color:var(--text-hl)" title="点击强制修改处女状态" onclick="editVirginStatus('${name}')">${isVirginStr}</div></div>
                 <div class="basic-cell"><div class="bc-label">声痕</div><div class="bc-val">${d.声痕位置||'-'}</div></div>
             </div>
 
-            <div class="wear-box">
+            <div class="wear-box mvu-minimal-hide">
                 <div class="block-header" style="border:none;margin:0;font-size:13px;display:flex;justify-content:space-between;align-items:baseline;">
                     <span>外貌与衣着</span>
                     <span class="reset-btn" style="padding:1px 4px;font-size:10px;font-weight:normal;border:none;background:transparent;" onclick="resetClothing('${name}')">🔄重置着装</span>
@@ -2353,12 +2420,12 @@
                 </div>
             </div>
 
-            <div class="split-card" style="margin-top:8px; margin-bottom:10px;">
+            <div class="split-card mvu-minimal-hide" style="margin-top:8px; margin-bottom:10px;">
                 <div class="sc-title">携带物品</div>
                 <div class="sc-content editable-text" style="color:#cbd5e1; white-space:pre-wrap;" onclick="editCharItem('${name}')">${itemText || '无'}</div>
             </div>
 
-            <div class="bottom-split">
+            <div class="bottom-split mvu-minimal-hide">
                 <div class="split-card">
                     <div class="sc-title">私密档案</div>
                     <div class="sc-content" style="display:flex;flex-direction:column;">
@@ -2460,6 +2527,17 @@
         const pBtn = $('#portrait-toggle-btn');
         if (showCharPortrait) pBtn.addClass('active'); else pBtn.removeClass('active');
         $('.portrait-settings-body').toggleClass('collapsed', !showCharPortrait);
+        // 行动界面总开关同步
+        const aBtn = $('#action-ui-toggle-btn');
+        if (aBtn.length) {
+            if (actionUiEnabled) aBtn.addClass('active'); else aBtn.removeClass('active');
+            $('.action-settings-body').toggleClass('collapsed', !actionUiEnabled);
+        }
+        applyActionUiNav();
+        // MVU简约模式开关同步
+        const mBtn = $('#minimal-toggle-btn');
+        if (mBtn.length) { if (minimalMode) mBtn.addClass('active'); else mBtn.removeClass('active'); }
+        applyMinimal();
         // 更新缓存状态显示（常驻进度条）
         updateCacheStatus();
         // 渲染自定义立绘列表
@@ -2553,6 +2631,8 @@
         applyViewportHeight();
         applyOverlayOpacity();
         applyUiOffset();
+        applyActionUiNav();
+        applyMinimal();
         
         // 初始首次渲染
         render();
@@ -2691,6 +2771,21 @@
                 <div class="block-header">通用设置</div>
 
                 <div class="setting-row">
+                    <span class="sr-label">昼夜模式</span>
+                    <span class="sr-sub" id="mode-label" style="flex:0 0 auto">黑夜</span>
+                    <div class="glass-toggle" id="mode-toggle-btn" onclick="toggleDayNight(event)" title="切换白天/黑夜模式">
+                        <div class="toggle-circle"></div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <span class="sr-label">MVU变量简约模式</span>
+                    <div class="glass-toggle" id="minimal-toggle-btn" onclick="toggleMinimalMode(event)" title="开启后简化状态栏显示，仅保留核心信息">
+                        <div class="toggle-circle"></div>
+                    </div>
+                </div>
+
+                <div class="setting-row">
                     <span class="sr-label">变量修改提示词注入</span>
                     <div class="glass-toggle" id="inj-toggle-btn" onclick="toggleInjection(event)" title="开启后，手动修改变量会向AI发送提示词">
                         <div class="toggle-circle"></div>
@@ -2701,15 +2796,6 @@
                     开启后，你在状态栏里手动修改的每一项变量（物品、剧情、角色状态等）都会以「系统最高优先级指令」的形式追加到输入框，通知AI这次改动，让AI据此续写。关闭时为静默模式：变量照常修改，但不会通知AI，AI可能无视你的改动。建议重置角色条目或重大改动时开启。
                 </div>
 
-                <div class="setting-row">
-                    <span class="sr-label">昼夜模式</span>
-                    <span class="sr-sub" id="mode-label" style="flex:0 0 auto">黑夜</span>
-                    <div class="glass-toggle" id="mode-toggle-btn" onclick="toggleDayNight(event)" title="切换白天/黑夜模式">
-                        <div class="toggle-circle"></div>
-                    </div>
-
-            </div>
-
                 <div class="data-block">
                     <div class="custom-portrait-title">界面垂直边距</div>
                     <div class="custom-hint" style="margin-bottom:4px;">调整展开后的最大垂直边距。当前值：<span id="viewport-height-val">380</span>px</div>
@@ -2718,18 +2804,28 @@
                         <span class="mini-reset-btn" onclick="resetViewportHeight(event)" title="恢复默认 380px">恢复默认</span>
                     </div>
                 </div>
-
             </div>
 
             <div class="data-block">
-                <div class="block-header">行动界面抓取标签</div>
-                <div class="sr-sub" style="margin-bottom:6px">从当前楼层的原文中提取最后一个指定标签内的内容生成可点击选项；也可适配自定义标签名。⚠️ 需要自己手动关掉原有选项相关正则防止重复，并为标签内容手动设置"仅格式显示"。</div>
-                <div class="setting-row" style="flex-wrap:wrap; gap:6px;">
-                    <span class="sr-label" style="min-width:auto;flex:0 0 auto">起始标签</span>
-                    <input type="text" class="tag-input" id="tag-open-input" value="<selection>" placeholder="<selection>" style="flex:1 1 80px; min-width:60px;">
-                    <span class="sr-label" style="min-width:auto;flex:0 0 auto">结束标签</span>
-                    <input type="text" class="tag-input" id="tag-close-input" value="</selection>" placeholder="</selection>" style="flex:1 1 80px; min-width:60px;">
-                    <span class="mini-reset-btn" onclick="resetTagInputs()" title="重置为默认 selection" style="flex:0 0 auto;">重置</span>
+                <div class="block-header">行动界面</div>
+                <div class="setting-row">
+                    <span class="sr-label">行动界面总开关</span>
+                    <div class="glass-toggle" id="action-ui-toggle-btn" onclick="toggleActionUi(event)" title="开启/关闭底部行动页与抓取标签设置">
+                        <div class="toggle-circle"></div>
+                    </div>
+                </div>
+                <div class="action-settings-body">
+                <div class="data-block">
+                    <div class="custom-portrait-title">行动界面抓取标签</div>
+                    <div class="custom-hint" style="margin-bottom:6px;">从当前楼层的原文中提取最后一个指定标签内的内容生成可点击选项；也可适配自定义标签名。⚠️ 需要自己手动关掉原有选项相关正则防止重复，并为标签内容手动设置"仅格式显示"。</div>
+                    <div class="setting-row" style="flex-wrap:wrap; gap:6px;">
+                        <span class="sr-label" style="min-width:auto;flex:0 0 auto">起始标签</span>
+                        <input type="text" class="tag-input" id="tag-open-input" value="<selection>" placeholder="<selection>" style="flex:1 1 80px; min-width:60px;">
+                        <span class="sr-label" style="min-width:auto;flex:0 0 auto">结束标签</span>
+                        <input type="text" class="tag-input" id="tag-close-input" value="</selection>" placeholder="</selection>" style="flex:1 1 80px; min-width:60px;">
+                        <span class="mini-reset-btn" onclick="resetTagInputs()" title="重置为默认 selection" style="flex:0 0 auto;">重置</span>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -2815,7 +2911,7 @@
         <div class="nav-btn" onclick="switchTab('page-user',this,'theme-blue')"><div class="nav-icon">👤</div><div>状态</div></div>
         <div class="nav-btn" onclick="switchTab('page-story',this,'theme-purple')"><div class="nav-icon">📖</div><div>剧情</div></div>
         <div class="nav-btn" onclick="switchTab('page-chars',this,'theme-pink')"><div class="nav-icon">💕</div><div>牵绊</div></div>
-        <div class="nav-btn" onclick="switchTab('page-opt',this,'theme-green')"><div class="nav-icon">⚡</div><div>行动</div></div>
+        <div class="nav-btn nav-btn-action" id="nav-action" onclick="switchTab('page-opt',this,'theme-green')"><div class="nav-icon">⚡</div><div>行动</div></div>
     </div>
 </div>
 
