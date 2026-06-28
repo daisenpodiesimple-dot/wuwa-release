@@ -2443,11 +2443,9 @@
         const isOnChars = $('.tab-page.active').attr('id') === 'page-chars';
         // 只要有立绘URL就给文字区块加毛玻璃遮罩 class（不管在哪个页渲染，html 模板都带遮罩）
         if (portraitUrl) {
-            html = html.replace(/class="psych-box"/g, 'class="psych-box portrait-blur-box"');
-            html = html.replace(/class="status-badge clickable-badge/g, 'class="status-badge clickable-badge portrait-blur-box');
-            html = html.replace(/class="basic-cell"/g, 'class="basic-cell portrait-blur-box"');
-            html = html.replace(/class="wear-box"/g, 'class="wear-box portrait-blur-box"');
-            html = html.replace(/class="split-card"/g, 'class="split-card portrait-blur-box"');
+            // 用正则在 class 引号内插入 portrait-blur-box，兼容已带其他类名(如 mvu-minimal-hide)的情况
+            html = html.replace(/class="((?:psych-box|wear-box|split-card|basic-cell)(?:\s[^"]*)?)"/g, (m, cls) => `class="${cls} portrait-blur-box"`);
+            html = html.replace(/class="(status-badge clickable-badge)([^"]*)"/g, (m, a, b) => `class="${a} portrait-blur-box${b}"`);
         }
         // 角色选择栏的小块也做半模糊（独立于 portraitUrl，直接操作 DOM）
         if (showCharPortrait) {
