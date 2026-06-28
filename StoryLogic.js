@@ -265,6 +265,33 @@ if (cmd.跳转版本_选项) {
         });
     }
 
+    // 5b. 精简模式展示键（与 _现场女性角色显示 平行计算，互不干扰；仅在精简模式条目里被读取）
+    const minimalChars = {};
+    if (data.女性角色) {
+        Object.keys(data.女性角色).forEach(key => {
+            const char = data.女性角色[key];
+            if (char.是否在场 === true) {
+                // 在场：只保留现场可见字段（声痕位置不保留，属界面隐藏项）
+                minimalChars[key] = {
+                    是否在场: true,
+                    性爱状态: char.性爱状态,
+                };
+            } else {
+                minimalChars[key] = { 是否在场: false };
+            }
+        });
+    }
+    let minimalPlayer = null;
+    if (data.主角信息) {
+        const p = data.主角信息;
+        minimalPlayer = {
+            是否是漂泊者: p.是否是漂泊者,
+            性别: p.性别,
+            身份与额外设定: p.身份与额外设定 || '',
+            性爱状态: p.性爱状态,
+        };
+    }
+
 
     data._storyState = { majorVerIdx, partIdx, isPostScript, _anchorVer: currentAnchorVer };
     // 重置指令 (加入了对下拉框选项的重置)
@@ -273,6 +300,8 @@ if (cmd.跳转版本_选项) {
     data.剧情显示 = displayString;
     data.剧情权重 = weightValue;
     data._现场女性角色显示 = visibleCharacters;
+    data._精简模式女性角色显示 = minimalChars;
+    data._精简模式主角信息显示 = minimalPlayer;
     data._已知角色名单 = Array.from(knownCharacterSet);
 
     return data;
