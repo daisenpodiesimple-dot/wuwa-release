@@ -67,6 +67,66 @@
         transform: translateY(-1px);
     }
 
+    /* ========== 首次进入用户协议弹层 ========== */
+    .ww-agreement-mask {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(5, 10, 20, 0.55); backdrop-filter: blur(8px) saturate(0.8);
+        -webkit-backdrop-filter: blur(8px) saturate(0.8);
+        z-index: 99998; display: none;
+    }
+    .ww-agreement-mask.show { display: block; }
+    .ww-agreement-overlay {
+        position: absolute; left: 50%; transform: translateX(-50%);
+        width: min(560px, 92%); z-index: 99999;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(23, 37, 84, 0.98) 100%);
+        border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 16px; padding: 0; box-sizing: border-box;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(251,191,36,0.15);
+        display: none;
+    }
+    .ww-agreement-overlay.show { display: block; }
+    .ww-agreement-card {
+        max-height: 380px; overflow-y: auto; padding: 22px 24px 12px;
+        color: #e2e8f0; font-size: 0.88em; line-height: 1.7;
+    }
+    .ww-agreement-card::-webkit-scrollbar { width: 6px; }
+    .ww-agreement-card::-webkit-scrollbar-thumb { background: rgba(251,191,36,0.4); border-radius: 3px; }
+    .ww-agreement-title {
+        font-size: 1.15em; font-weight: 700; color: #fbbf24;
+        text-align: center; margin-bottom: 14px; letter-spacing: 0.5px;
+    }
+    .ww-agreement-body p { margin: 0 0 10px; }
+    .ww-agreement-body .warn { color: #fca5a5; font-weight: 600; }
+    .ww-agreement-body .section-h { color: #7dd3fc; font-weight: 600; margin-top: 12px; }
+    .ww-agreement-scroll-hint {
+        text-align: center; font-size: 0.78em; color: #94a3b8; padding: 8px 0 4px;
+    }
+    .ww-agreement-footer {
+        padding: 10px 24px 18px; border-top: 1px solid rgba(148,163,184,0.15);
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .ww-agreement-check-row {
+        display: flex; align-items: center; gap: 8px; font-size: 0.88em; color: #64748b;
+    }
+    .ww-agreement-check-row input[type=checkbox] {
+        width: 18px; height: 18px; accent-color: #fbbf24; cursor: not-allowed; opacity: 0.45;
+    }
+    .ww-agreement-check-row.ready { color: #e2e8f0; }
+    .ww-agreement-check-row.ready input[type=checkbox] { cursor: pointer; opacity: 1; }
+    .ww-agreement-confirm-btn {
+        padding: 10px 32px; border-radius: 30px; border: 1px solid rgba(56,189,248,0.3);
+        background: rgba(15,23,42,0.6); color: #475569; font-size: 0.95em; cursor: not-allowed;
+        transition: all 0.3s ease;
+    }
+    .ww-agreement-confirm-btn.ready {
+        background: linear-gradient(135deg, rgba(56,189,248,0.3), rgba(59,130,246,0.3));
+        color: #e0f2fe; cursor: pointer; border-color: rgba(56,189,248,0.7);
+        box-shadow: 0 6px 20px rgba(56,189,248,0.3);
+    }
+    .ww-agreement-confirm-btn.ready:hover {
+        background: linear-gradient(135deg, rgba(56,189,248,0.45), rgba(59,130,246,0.45));
+        transform: translateY(-2px);
+    }
+
     /* 动画定义 */
     @keyframes logoIntro {
         0% { transform: scale(1.4) translateY(150px); opacity: 0; }
@@ -90,7 +150,7 @@
         gap: 25px;
         opacity: 0;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 620px) {
         .wuwa-grid {
             grid-template-columns: 1fr 1fr;
             align-items: start;
@@ -338,18 +398,50 @@
     }
   </style>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
 </head>
 <body>
+
+<!-- 首次进入用户协议遮罩（毛玻璃） -->
+<div class="ww-agreement-mask" id="ww-agreement-mask"></div>
+<div class="ww-agreement-overlay" id="ww-agreement-overlay">
+    <div class="ww-agreement-card" id="ww-agreement-card">
+        <div class="ww-agreement-title">⚠️ 严正声明 · 用户协议</div>
+        <div class="ww-agreement-body">
+            <p><span class="warn">本作品完全免费。如果你是从别处付费购买的，说明你被骗了。</span></p>
+            <p><span class="warn">请勿在墙内社区、QQ群传播或讨论本作相关内容。</span></p>
+            <p class="section-h">使用资格</p>
+            <p class="warn">未满18岁禁止游玩此角色卡。继续即表示你已确认自己已年满18周岁（或所在地区的法定成年年龄）。</p>
+            <p class="section-h">版权与发布</p>
+            <p>本角色卡 <strong>仅在【类脑/旅程】平台发布</strong>。</p>
+            <p><strong>严禁任何形式的转载、搬运或商业用途。</strong></p>
+            <p>本作仅作为人工智能提示词与人机交互相关的研究、学习交流使用；作者不对AI生成的内容承担任何责任。</p>
+            <p class="section-h">下载与二创</p>
+            <p>下载后请在24小时内删除。二创发布请务必征得 <strong>@夜の東側</strong> 及 <strong>@游星</strong> 两人同意后方可进行。</p>
+            <p class="section-h">免责</p>
+            <p>本作为同人创作，鸣潮及相关角色版权归库洛游戏所有。本卡仅作技术演示与交流，不用于任何商业目的。</p>
+        </div>
+        <div class="ww-agreement-scroll-hint" id="ww-agreement-hint">↓ 请向下滑动阅读完整协议 ↓</div>
+    </div>
+    <div class="ww-agreement-footer">
+        <div class="ww-agreement-check-row" id="ww-agreement-checkrow">
+            <input type="checkbox" id="ww-agreement-check" disabled>
+            <label for="ww-agreement-check">我已阅读并同意上述全部协议</label>
+        </div>
+        <button type="button" class="ww-agreement-confirm-btn" id="ww-agreement-confirm" disabled>开始游玩</button>
+    </div>
+</div>
 
 <div class="wuwa-panel">
     <div class="wuwa-logo-container">
         <img src="https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/OpeningLogos/WuwaLogo.png" alt="WuWa Logo" class="wuwa-logo">
     </div>
     
-    <!-- 使用教程按钮 (磨砂玻璃) -->
-    <button id="ww-tutorial-btn" class="tutorial-btn">📘 使用教程</button>
+    <!-- 使用教程 + MVU简约模式 按钮 (磨砂玻璃) -->
+    <div style="display:flex; gap:12px; justify-content:center; margin:0 auto 25px; flex-wrap:wrap;">
+        <button id="ww-tutorial-btn" class="tutorial-btn" style="margin:0;">📘 使用教程</button>
+        <button id="ww-mvu-toggle-btn" class="tutorial-btn" style="margin:0; border-color:rgba(251,191,36,0.35); color:#fbbf24;">🧪 切换到 MVU 变量简约模式</button>
+    </div>
 
     <div class="wuwa-grid">
         <div class="col-left">
@@ -478,12 +570,19 @@
 
 <script>
 $(async function() {
-    toastr.options = { "positionClass": "toast-bottom-right", "timeOut": "4000" };
-
     // ==========================================
     // 0. 穿透引擎与API获取
     // ==========================================
     const ST_WIN = window.parent || window || top;
+    // 通知统一走酒馆的 toastr（父窗口），弹在酒馆主界面而非 html 内
+    try {
+        if (typeof ST_WIN.toastr === "object" && ST_WIN.toastr) {
+            window.toastr = ST_WIN.toastr;
+        }
+    } catch (e) {}
+    if (typeof toastr !== "undefined" && toastr && toastr.options) {
+        toastr.options = { "positionClass": "toast-bottom-right", "timeOut": "4000" };
+    }
     function getSTFn(fnName) {
         if (typeof ST_WIN[fnName] === 'function') return ST_WIN[fnName];
         if (typeof globalThis !== 'undefined' && typeof globalThis[fnName] === 'function') return globalThis[fnName];
@@ -582,21 +681,66 @@ $(async function() {
 $('#ww-tutorial-btn').on('click', function() {
     alert(
         "📘 使用教程\n\n" +
-        "【快速上手】\n" +
-        "1. 选择身份 → 勾选是否扮演漂泊者、选性别、填自定义设定。\n" +
-        "2. 设定剧情 → 剧情模式可指定版本/阶段；不勾选则自动用最新后日谈。\n" +
-        "3. 填场景信息 → 区域、地点、开局遇到的角色（必填）、补充剧情。\n" +
-        "4. 按“开启我的索拉里斯之旅”生成开场。\n\n" +
-        "【按钮说明】\n" +
-        "🔹 填写示例 → 一键填充默认演示数据（漂泊者1.0开局）。\n" +
-        "🔹 ⚡ 自动填写 → AI根据身份与剧情自动推荐场景信息。\n" +
-        "🔹 ✨ 完善身份变量 → 非漂泊者时AI帮你生成身份描述。\n\n" +
-        "【注意】\n" +
-        "• 开局角色必填，否则无法启动。\n" +
-        "• 不扮演漂泊者需自行注入世界书设定。\n" +
-        "• 自动填写依赖AI，结果仅供参考修改。"
+        "第一步：选择身份。勾选是否扮演漂泊者，选择性别，如果想自定义身份可在下方填写。\n\n" +
+        "第二步：设定剧情起点。勾选「剧情演绎模式」可指定开局的游戏版本和阶段（用来自定义时间线）；不勾选则自动从最新剧情的后日谈开始。不用担心选了改不了——之后随时能在剧情控制台里跳过或切换剧情。\n\n" +
+        "第三步：填写场景信息。选区域、填详细地点、开局见到的角色（必填），可补充开局剧情。\n\n" +
+        "第四步：点「开启我的索拉里斯之旅」生成开场白。\n\n" +
+        "如果想快速体验，可以用「填写示例」一键填入默认数据，或用「⚡自动填写」让AI根据你的身份和剧情自动推荐场景，再手动调整即可。"
     );
 });
+
+    // MVU 变量简约模式切换（读/写 global statusBarSettings.minimalMode，与 StatusBar 同步）
+    // 按钮文案根据当前模式动态显示：默认模式 → "切换到 MVU 变量简约模式"；简约模式 → "切换到默认模式"
+    async function refreshMvuBtn() {
+        let cur = false;
+        try {
+            const _getVariables = getSTFn("getVariables");
+            if (_getVariables) {
+                const g = await _getVariables({ type: "global" });
+                const s = g && g.statusBarSettings;
+                if (s && typeof s.minimalMode === "boolean") cur = s.minimalMode;
+            }
+        } catch (e) {}
+        const $btn = $('#ww-mvu-toggle-btn');
+        if (cur) {
+            $btn.text("🎯 切换到默认模式");
+            $btn.css({ borderColor: "rgba(56,189,248,0.35)", color: "#7dd3fc" });
+        } else {
+            $btn.text("🧪 切换到 MVU 变量简约模式");
+            $btn.css({ borderColor: "rgba(251,191,36,0.35)", color: "#fbbf24" });
+        }
+    }
+    $('#ww-mvu-toggle-btn').on('click', async function() {
+        let cur = false;
+        try {
+            const _getVariables = getSTFn("getVariables");
+            if (_getVariables) {
+                const g = await _getVariables({ type: "global" });
+                const s = g && g.statusBarSettings;
+                if (s && typeof s.minimalMode === "boolean") cur = s.minimalMode;
+            }
+        } catch (e) {}
+        const willEnable = !cur;
+        if (willEnable) {
+            const msg = "【实验性功能】MVU变量简约模式\n\n"
+                + "此模式仅限高级用户适配使用自定义数据库模板时启用，用以避免数据重复或冲突。\n"
+                + "开启后会把大部分变量的信息与更新规则对AI隐藏，仅保留主角基本信息、关键女性角色在场与性爱信息、剧情关键信息等。\n\n"
+                + "⚠️ 如果你不懂这个按钮是干嘛的，永远不要动它！\n\n"
+                + "确认要开启吗？";
+            if (!confirm(msg)) return;
+        }
+        try {
+            const getVariables = getSTFn("getVariables");
+            const replaceVariables = getSTFn("replaceVariables");
+            if (!getVariables || !replaceVariables) { toastr.error("无法访问全局变量接口"); return; }
+            const vars = getVariables({ type: "global" });
+            if (!vars.statusBarSettings || typeof vars.statusBarSettings !== "object") vars.statusBarSettings = {};
+            vars.statusBarSettings.minimalMode = willEnable;
+            replaceVariables(vars, { type: "global" });
+            toastr.info(willEnable ? "已进入 MVU 变量简约模式" : "已退出 MVU 变量简约模式，恢复完整变量显示");
+            await refreshMvuBtn();
+        } catch (e) { toastr.error("简约模式切换失败: " + e.message); }
+    });
 
 
     // ==========================================
@@ -1107,6 +1251,128 @@ UI_CustomIdentity: "${customInput.replace(/"/g, '\\"')}"
     });
 
     await detectEnvironment();
+
+    // 初始化 MVU 简约模式按钮文案（读全局变量）
+    refreshMvuBtn();
+
+    // ========== 首次进入用户协议 ==========
+    (function initAgreement() {
+        const LS_KEY = "ww_agreement_accepted_v1";
+        const accepted = (() => { try { return localStorage.getItem(LS_KEY) === "1"; } catch (e) { return false; } })();
+        const $startBtn = $("#ww-start-btn");
+        const $overlay = $("#ww-agreement-overlay");
+        const $mask = $("#ww-agreement-mask");
+        const $card = $("#ww-agreement-card");
+        const $hint = $("#ww-agreement-hint");
+        const $check = $("#ww-agreement-check");
+        const $checkrow = $("#ww-agreement-checkrow");
+        const $confirm = $("#ww-agreement-confirm");
+
+        if (accepted) {
+            // 已同意过，开始按钮直接可用
+            $startBtn.prop("disabled", false).css({opacity:1, cursor:"pointer"});
+            return;
+        }
+
+        // 首次进入：禁用开始按钮，显示协议层
+        $startBtn.prop("disabled", true).css({opacity:0.4, cursor:"not-allowed"});
+        $overlay.addClass("show");
+        $mask.addClass("show");
+
+        // 跟随父窗口滚动：overlay 用 position:absolute（相对 iframe body），
+        // 用 window.frameElement.getBoundingClientRect() 拿 iframe 在父视口的实时位置，
+        // 让 overlay 始终居于当前可见区。
+        const parentWin = ST_WIN || window;
+        function positionOverlay() {
+            const overlayH = $overlay.outerHeight() || 420;
+            // iframe 自身视口高度（用户当前能看到 iframe 的那部分高度）
+            const iframeVisH = window.innerHeight || parentWin.innerHeight || 600;
+            // iframe body 顶部在 iframe 视口里的偏移（iframe 内部可能也滚了）
+            const bodyTopInView = document.body.getBoundingClientRect().top;
+            // iframe 顶部在父视口里的偏移：通过 frameElement
+            let frameTopInParent = 0, frameVisH = iframeVisH;
+            try {
+                const fe = window.frameElement;
+                if (fe && fe.getBoundingClientRect) {
+                    const fr = fe.getBoundingClientRect();
+                    frameTopInParent = fr.top;     // iframe 顶在父视口的 y
+                    frameVisH = fr.height || iframeVisH;
+                }
+            } catch (e) {}
+            // 父视口里 iframe 可见区域的中点（相对 iframe 顶）
+            // iframe 可见区域：父视口裁剪后露出的部分
+            let visStart = 0, visEnd = frameVisH;
+            if (frameTopInParent < 0) { visStart = -frameTopInParent; }   // iframe 顶超出父视口上沿
+            const parentH = parentWin.innerHeight || 600;
+            if (frameTopInParent + frameVisH > parentH) { visEnd = parentH - frameTopInParent; } // 超出下沿
+            if (visEnd < visStart) visEnd = visStart = frameVisH / 2;
+            const visCenterInFrame = (visStart + visEnd) / 2;
+            // 转到 iframe body 坐标：减去 body 顶偏移
+            let top = visCenterInFrame - bodyTopInView - overlayH / 2;
+            const maxTop = document.body.scrollHeight - overlayH - 8;
+            if (top < 8) top = 8;
+            if (maxTop > 8 && top > maxTop) top = maxTop;
+            $overlay.css("top", top + "px");
+        }
+        positionOverlay();
+        let posTimer = null;
+        function onScroll() {
+            if (posTimer) return;
+            posTimer = requestAnimationFrame(() => { posTimer = null; positionOverlay(); });
+        }
+        // 监听父窗口滚动容器 + resize + iframe 自身滚动
+        try {
+            const parentDoc = parentWin.document || document;
+            const candidates = ["#sheld", "#chat", ".scrollable"];
+            for (const sel of candidates) {
+                const el = parentDoc.querySelector(sel);
+                if (el) el.addEventListener("scroll", onScroll, { passive: true });
+            }
+            parentWin.addEventListener("scroll", onScroll, { passive: true });
+            parentWin.addEventListener("resize", onScroll);
+            window.addEventListener("scroll", onScroll, { passive: true });
+            window.addEventListener("resize", onScroll);
+        } catch (e) {}
+        // 兜底定时器（防止漏监听父滚动容器）
+        setInterval(onScroll, 400);
+
+        // 协议卡片滚动到底才能勾选（scroll + wheel 兜底 + 短内容直接放行）
+        function checkBottom() {
+            const el = $card[0];
+            const atBottom = el.scrollHeight <= el.clientHeight + 2 ||
+                el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
+            if (atBottom) {
+                $check.prop("disabled", false);
+                $checkrow.addClass("ready");
+                $hint.text("✓ 已阅读完毕，可以勾选同意");
+                return true;
+            }
+            return false;
+        }
+        $card.on("scroll wheel", checkBottom);
+        // 若卡片内容本就不超（无需滚），直接放行 checkbox
+        setTimeout(checkBottom, 100);
+
+        // 勾选后亮起确认按钮
+        $check.on("change", function() {
+            if (this.checked) {
+                $confirm.addClass("ready").prop("disabled", false);
+            } else {
+                $confirm.removeClass("ready").prop("disabled", true);
+            }
+        });
+
+        // 点确认：记录同意，隐藏协议，启用开始按钮
+        $confirm.on("click", function() {
+            if (!this.classList.contains("ready")) return;
+            try { localStorage.setItem(LS_KEY, "1"); } catch (e) {}
+            $overlay.removeClass("show");
+            $mask.removeClass("show");
+            $startBtn.prop("disabled", false).css({opacity:1, cursor:"pointer"});
+            toastr.success("协议已确认，祝游玩愉快！");
+        });
+    })();
+
     initializeUI();
 });
 </script>
