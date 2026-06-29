@@ -623,16 +623,19 @@ async function executeMvuModeSwitch(targetMode, silent = true) {
 
 // MVU 模式心跳同步：用 global statusBarSettings.minimalMode 作为期望模式，
 // 扫世界书 [默认]/[精简] 词条实际 enabled 状态，不一致才全量切；一致则不动，防无限刷新。
-async function cleanupMvuModeEntries() {
+async function cleanupMvuModeEntries(cachedEntries) {
   try {
-    let bookNames = [];
-    try {
-      const charBooks = getCharWorldbookNames("current");
-      if (charBooks && charBooks.primary) bookNames.push(charBooks.primary);
-    } catch (e) { return; }
-    if (bookNames.length === 0) return;
-    const targetBook = bookNames[0];
-    const entries = await getWorldbook(targetBook);
+    // 优先用传入的缓存 entries
+    let entries = cachedEntries;
+    if (!entries) {
+      let bookNames = [];
+      try {
+        const charBooks = getCharWorldbookNames("current");
+        if (charBooks && charBooks.primary) bookNames.push(charBooks.primary);
+      } catch (e) { return; }
+      if (bookNames.length === 0) return;
+      entries = await getWorldbook(bookNames[0]);
+    }
     if (!entries || entries.length === 0) return;
 
     // 期望模式：从 StatusBar 的 global 读
@@ -1936,7 +1939,7 @@ let lastActiveStoryIds = "";
 // 🔤 简繁模式同步（独立函数）：用「術語糾正」词条开关状态作为世界书真实模式 ground truth，
 // 与 SWITCHER_STATE.simpTradMode 不一致时触发一次全量切换。一致则不动，不干扰普通词条的手动开关。
 // 供 masterLoop 在自动/非自动模式下都调用。
-async function cleanupSimpTradEntries() {
+async function cleanupSimpTradEntries(cachedEntries) {
   try {
     // 用「術語糾正」词条的 enabled 作为世界书真实模式的 ground truth：开=繁体，关=简体
     let actualMode = null;
@@ -1944,7 +1947,8 @@ async function cleanupSimpTradEntries() {
       const charBooks = getCharWorldbookNames("current");
       const myBook = charBooks && charBooks.primary;
       if (myBook) {
-        const entries = await getWorldbook(myBook);
+        // 优先用传入的缓存 entries，避免每秒重复拉世界书
+        const entries = cachedEntries || await getWorldbook(myBook);
         const termEntry = entries && entries.find((e) => e.name && e.name.includes("術語糾正"));
         if (termEntry) actualMode = termEntry.enabled ? "trad" : "simp";
       }
@@ -1966,16 +1970,27 @@ async function cleanupSimpTradEntries() {
   }
 }
 
+// 心跳计数器：简繁/MVU 同步每 3 秒一次（masterLoop 1s 一次）
+let heartbeatTick = 0;
+
 async function masterLoop() {
   let data = currentData;
   // 【修复】即使关闭自动模式，悬浮窗状态也要随剧情/手动开关刷新
   if (!SWITCHER_STATE.autoMode) {
     await floatScanAndRefresh(data);
-    // 非自动模式也做简繁开关修正（世界书重置/重导入后自动恢复）
-    const cleanRes = await cleanupSimpTradEntries();
-    if (cleanRes) currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
-    // MVU 简约/默认模式心跳同步（只读 StatusBar global，不一致才切）
-    await cleanupMvuModeEntries();
+    // 简繁/MVU 同步降频到每 3 秒一次（masterLoop 1s 一次，用计数器 mod）
+    heartbeatTick = (heartbeatTick + 1) % 3;
+    if (heartbeatTick === 0) {
+      // 共享 entries：拉一次喂给简繁和 MVU，避免各拉一次
+      let sharedEntries = null;
+      try {
+        const cb = getCharWorldbookNames("current");
+        if (cb && cb.primary) sharedEntries = await getWorldbook(cb.primary);
+      } catch (e) {}
+      const cleanRes = await cleanupSimpTradEntries(sharedEntries);
+      if (cleanRes) currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
+      await cleanupMvuModeEntries(sharedEntries);
+    }
     return;
   }
   if (!data.pairs || data.pairs.length === 0) {
@@ -1990,15 +2005,21 @@ async function masterLoop() {
     } else return;
   }
 
-  // 🔤 简繁清理：确保非当前模式的词条保持关闭（已是正确状态则什么都不做）
-  const cleanRes = await cleanupSimpTradEntries();
-  if (cleanRes) {
-    currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
-    data = currentData;
+  // 🔤 简繁清理 + 📦 MVU 同步：降频到每 3 秒一次，共享 entries
+  heartbeatTick = (heartbeatTick + 1) % 3;
+  if (heartbeatTick === 0) {
+    let sharedEntries = null;
+    try {
+      const cb = getCharWorldbookNames("current");
+      if (cb && cb.primary) sharedEntries = await getWorldbook(cb.primary);
+    } catch (e) {}
+    const cleanRes = await cleanupSimpTradEntries(sharedEntries);
+    if (cleanRes) {
+      currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
+      data = currentData;
+    }
+    await cleanupMvuModeEntries(sharedEntries);
   }
-
-  // 📦 MVU 简约/默认模式心跳同步（只读 StatusBar global，不一致才切）
-  await cleanupMvuModeEntries();
 
   // 🔒 如果输入框不再包含开场指令，释放输入覆盖标记
   const $input = $("#send_textarea");
