@@ -45,6 +45,7 @@ let SWITCHER_STATE = {
   simpTradMode: "simp",
   floatSizeMode: "large",
   uiDarkMode: true,
+  minimalMode: false, // MVU变量简约模式镜像（只读 StatusBar 的 global statusBarSettings.minimalMode，不反向写）
 };
 
 // 自动蓝灯/手动蓝灯条目 uid（内存镜像，持久化到全局变量）
@@ -115,6 +116,17 @@ async function saveWbSimpTradMode() {
       },
       { type: "global" },
     );
+  } catch (e) {}
+}
+
+// 读取 MVU 变量简约模式（global 变量 statusBarSettings.minimalMode，由 StatusBar 写入；WIC 只读不写）
+async function loadWbMinimalMode() {
+  try {
+    const g = await getVariables({ type: "global" });
+    const s = g && g.statusBarSettings;
+    if (s && typeof s.minimalMode === "boolean") {
+      SWITCHER_STATE.minimalMode = s.minimalMode;
+    }
   } catch (e) {}
 }
 
@@ -226,6 +238,13 @@ function getEntryType(entryName) {
 function getSimpTradType(entryName) {
   if (/[\(（]简[\)）]/.test(entryName)) return "simp";
   if (/[\(（]繁[\)）]/.test(entryName)) return "trad";
+  return "none";
+}
+
+// 检测词条 MVU 模式标记：[默认] / [精简] / 无标记(通用)
+function getMvuModeType(entryName) {
+  if (/\[\s*默认\s*\]/.test(entryName)) return "default";
+  if (/\[\s*精简\s*\]/.test(entryName)) return "minimal";
   return "none";
 }
 
@@ -551,6 +570,100 @@ async function executeSimpTradSwitch(targetMode, silent = false) {
     }, 400);
   } catch (e) {
     toastr.error("简繁切换失败: " + e.message);
+  }
+}
+
+// ==================== MVU 变量简约/默认 切换 ====================
+// targetMode: "default" | "minimal"
+// 批量开关 [默认]/[精简] 标记词条，二者互斥；无标记词条不动。
+async function executeMvuModeSwitch(targetMode, silent = true) {
+  try {
+    let bookNames = [];
+    try {
+      const charBooks = getCharWorldbookNames("current");
+      if (charBooks && charBooks.primary) bookNames.push(charBooks.primary);
+    } catch (e) { console.warn("[WuWa MVU] 无法获取角色世界书:", e); }
+    if (bookNames.length === 0) {
+      if (!silent) toastr.error("未检测到绑定世界书");
+      return;
+    }
+
+    const targetBook = bookNames[0];
+    const entries = await getWorldbook(targetBook);
+    if (!entries || entries.length === 0) {
+      if (!silent) toastr.error("世界书为空");
+      return;
+    }
+
+    // [默认] 与 [精简] 互斥：当前模式对应标记开，另一标记关，无标记不动
+    const wantDefault = targetMode === "default";
+    const ops = [];
+    entries.forEach((entry) => {
+      const m = getMvuModeType(entry.name);
+      if (m === "none") return;
+      const shouldEnable = (m === "default" && wantDefault) || (m === "minimal" && !wantDefault);
+      if (entry.enabled !== shouldEnable) {
+        ops.push({ uid: entry.uid, enable: shouldEnable });
+      }
+    });
+
+    if (ops.length > 0) {
+      await applyChanges(targetBook, ops, true);
+      console.log(`[WuWa MVU] 切换至 ${wantDefault ? "默认" : "精简"}模式，变更 ${ops.length} 条`);
+    }
+
+    setTimeout(() => {
+      loadDataAndRender();
+      refreshFloatingWindowContent();
+    }, 400);
+  } catch (e) {
+    console.warn("[WuWa MVU] 切换失败:", e);
+  }
+}
+
+// MVU 模式心跳同步：用 global statusBarSettings.minimalMode 作为期望模式，
+// 扫世界书 [默认]/[精简] 词条实际 enabled 状态，不一致才全量切；一致则不动，防无限刷新。
+async function cleanupMvuModeEntries() {
+  try {
+    let bookNames = [];
+    try {
+      const charBooks = getCharWorldbookNames("current");
+      if (charBooks && charBooks.primary) bookNames.push(charBooks.primary);
+    } catch (e) { return; }
+    if (bookNames.length === 0) return;
+    const targetBook = bookNames[0];
+    const entries = await getWorldbook(targetBook);
+    if (!entries || entries.length === 0) return;
+
+    // 期望模式：从 StatusBar 的 global 读
+    let expectMinimal = SWITCHER_STATE.minimalMode;
+    try {
+      const g = await getVariables({ type: "global" });
+      const s = g && g.statusBarSettings;
+      if (s && typeof s.minimalMode === "boolean") {
+        expectMinimal = s.minimalMode;
+        SWITCHER_STATE.minimalMode = s.minimalMode; // 顺带刷新内存镜像
+      }
+    } catch (e) {}
+
+    const expectMode = expectMinimal ? "minimal" : "default";
+    const wantDefault = expectMode === "default";
+
+    // 检查世界书实际状态是否和期望一致（存在任一不一致就需切换）
+    let needSwitch = false;
+    entries.forEach((entry) => {
+      const m = getMvuModeType(entry.name);
+      if (m === "none") return;
+      const shouldEnable = (m === "default" && wantDefault) || (m === "minimal" && !wantDefault);
+      if (entry.enabled !== shouldEnable) needSwitch = true;
+    });
+
+    if (needSwitch) {
+      console.log(`[WuWa MVU] 🔄 心跳检测到模式不一致，执行全量切换至 ${wantDefault ? "默认" : "精简"}模式`);
+      await executeMvuModeSwitch(expectMode, true);
+    }
+  } catch (e) {
+    console.warn("[WuWa MVU] 心跳同步失败:", e);
   }
 }
 
@@ -1861,6 +1974,8 @@ async function masterLoop() {
     // 非自动模式也做简繁开关修正（世界书重置/重导入后自动恢复）
     const cleanRes = await cleanupSimpTradEntries();
     if (cleanRes) currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
+    // MVU 简约/默认模式心跳同步（只读 StatusBar global，不一致才切）
+    await cleanupMvuModeEntries();
     return;
   }
   if (!data.pairs || data.pairs.length === 0) {
@@ -1881,6 +1996,9 @@ async function masterLoop() {
     currentData = { pairs: cleanRes.pairs, stories: cleanRes.stories, summaries: cleanRes.summaries };
     data = currentData;
   }
+
+  // 📦 MVU 简约/默认模式心跳同步（只读 StatusBar global，不一致才切）
+  await cleanupMvuModeEntries();
 
   // 🔒 如果输入框不再包含开场指令，释放输入覆盖标记
   const $input = $("#send_textarea");
@@ -3154,7 +3272,7 @@ function loadSettings() {
 
 $(() => {
   loadSettings();
-  loadWbUiDarkMode().then(() => loadWbUiSizeMode()).then(() => loadWbSimpTradMode()).then(() => loadAutoBlueUids()).then(() => createFloatingWindow());
+  loadWbUiDarkMode().then(() => loadWbUiSizeMode()).then(() => loadWbSimpTradMode()).then(() => loadWbMinimalMode()).then(() => loadAutoBlueUids()).then(() => createFloatingWindow());
   if (typeof appendInexistentScriptButtons === "function") {
     appendInexistentScriptButtons([
       { name: SWITCHER_CONFIG.buttonName, visible: true },
