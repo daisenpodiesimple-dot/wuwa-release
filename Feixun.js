@@ -135,7 +135,7 @@ let currentChatChar = null;
             if (currentChatChar) {
                 if (currentChatChar.startsWith('group_')) {
                     const groupInfo = getFeixunGroups()[currentChatChar];
-                    if (groupInfo) targetChat = groupInfo.members.filter(m => m !== getPlayerName()).join(',');
+                    if (groupInfo) targetChat = sanitizeMembers(groupInfo.members).filter(m => m !== getPlayerName()).join(',');
                 } else {
                     targetChat = currentChatChar;
                 }
@@ -697,6 +697,28 @@ let currentChatChar = null;
 
     function getFeixunGroups() { return getVariables({ type: 'chat' })?.fx_groups || {}; }
     async function saveFeixunGroups(groupsDict) { await insertOrAssignVariables({ fx_groups: groupsDict }, { type: 'chat' }); }
+
+    // 校验群成员：剔除已不存在的角色（自定义角色被删除后，其它聊天的群仍可能引用其名）。
+    // 判据：成员名既不在 FEIXUN_DB.characters（内置+自定义回灌后都在这），也不是玩家自己，视为无效。
+    function sanitizeMembers(members) {
+        if (!Array.isArray(members)) return members;
+        const player = getPlayerName();
+        return members.filter(m => m === player || FEIXUN_DB.characters[m]);
+    }
+    // 清理单个群的无效成员，若有变化则持久化；返回清理后的 group
+    async function sanitizeGroup(groupId) {
+        const all = getFeixunGroups();
+        const g = all[groupId];
+        if (!g || !Array.isArray(g.members)) return g;
+        const before = g.members.length;
+        g.members = sanitizeMembers(g.members);
+        if (g.members.length !== before) {
+            all[groupId] = g;
+            await saveFeixunGroups(all);
+            console.log(`[飞讯] 群【${g.name || groupId}】已清理无效成员 ${before - g.members.length} 个`);
+        }
+        return g;
+    }
 
     function getUnreadCounts() { return getVariables({ type: 'chat' })?.fx_unread || {}; }
     async function saveUnreadCounts(dict) { await insertOrAssignVariables({ fx_unread: dict }, { type: 'chat' }); }
@@ -2160,8 +2182,8 @@ ${historyText}
     }
 
    async function handleGroupSendMessage(groupId, text, isDice = false) {
-        const group = getFeixunGroups()[groupId];
-        const allMembers = group.members.filter(m => m !== getPlayerName());
+        const group = await sanitizeGroup(groupId);
+        const allMembers = (group?.members || []).filter(m => m !== getPlayerName());
         const userName = getPlayerName(); const gameTime = getCurrentGameTime();
         const config = getFxGlobalConfig(); // 获取群聊动态配置
         
@@ -2913,7 +2935,10 @@ ${historyText}
         const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
         const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
         const unreadCounts = getUnreadCounts();
-        const customCharKeys = Object.keys(getVariables({type: 'chat'})?.fx_custom_chars || {});
+        // 自定义角色判据：与启动回灌一致，同时看 global+chat，否则从 global 回灌的角色在别的聊天里删不掉
+        const _gCustom = getVariables({type: 'global'})?.fx_custom_chars || {};
+        const _cCustom = getVariables({type: 'chat'})?.fx_custom_chars || {};
+        const customCharKeys = Object.keys(Object.assign({}, _gCustom, _cCustom));
         
         const searchTerm = p$('#fx-search-input').val()?.toLowerCase() || "";
         const allLogs = getFeixunLogs();
@@ -3058,6 +3083,19 @@ ${historyText}
                                     if (v.fx_custom_chars && v.fx_custom_chars[char]) delete v.fx_custom_chars[char];
                                     return v;
                                 }, { type: 'global' });
+                                // 清理所有群聊 members 里对该角色的引用（保留空群，不解散）
+                                try {
+                                    const _groups = getVariables({type: 'chat'})?.fx_groups || {};
+                                    let groupChanged = false;
+                                    Object.keys(_groups).forEach(gid => {
+                                        const g = _groups[gid];
+                                        if (g && Array.isArray(g.members) && g.members.includes(char)) {
+                                            g.members = g.members.filter(m => m !== char);
+                                            groupChanged = true;
+                                        }
+                                    });
+                                    if (groupChanged) await insertOrAssignVariables({ fx_groups: _groups }, { type: 'chat' });
+                                } catch (e) { console.warn('[飞讯] 清理群聊成员残留失败', e); }
                                 await updateVariablesWith(v => {
                                     if (Array.isArray(v.fx_pinned_chars)) v.fx_pinned_chars = v.fx_pinned_chars.filter(x => x !== char);
                                     if (Array.isArray(v.fx_bottom_chars)) v.fx_bottom_chars = v.fx_bottom_chars.filter(x => x !== char);
