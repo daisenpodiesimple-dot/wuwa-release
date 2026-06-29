@@ -1277,6 +1277,11 @@
         if(e) e.stopPropagation();
         $('#inj-help-popover').toggleClass('show');
     };
+    // MVU简约模式说明气泡
+    window.toggleMinimalHelp = function(e) {
+        if(e) e.stopPropagation();
+        $('#minimal-help-popover').toggleClass('show');
+    };
 
     // 抓取标签重置为默认 selection
     window.resetTagInputs = function() {
@@ -1346,11 +1351,25 @@
     }
     window.toggleMinimalMode = function(e) {
         if(e) e.stopPropagation();
-        minimalMode = !minimalMode;
+        const willEnable = !minimalMode;
+        // 开启前弹确认窗（关闭不弹，直接关）
+        if (willEnable) {
+            const msg = "【实验性功能】MVU变量简约模式\n\n"
+                + "此模式仅限高级用户适配使用自定义数据库模板时启用，用以避免数据重复或冲突。\n"
+                + "开启后会把大部分变量的信息与更新规则对AI隐藏，仅保留主角基本信息、关键女性角色在场与性爱信息、剧情关键信息等。\n\n"
+                + "⚠️ 如果你不懂这个按钮是干嘛的，永远不要动它！\n\n"
+                + "确认要开启吗？";
+            if (!confirm(msg)) return; // 用户取消，不开启
+        }
+        minimalMode = willEnable;
         const btn = $('#minimal-toggle-btn');
         if (minimalMode) btn.addClass('active'); else btn.removeClass('active');
         applyMinimal();
         saveSettings();
+        if (typeof toastr !== 'undefined') {
+            if (minimalMode) toastr.info("已进入 MVU 变量简约模式：大部分变量信息已对AI隐藏");
+            else toastr.info("已退出 MVU 变量简约模式，恢复完整变量显示");
+        }
     };
     // 缓存所有立绘图片按钮
     window.cacheAllPortraitsBtn = async function(e) {
@@ -2778,17 +2797,21 @@
 
                 <div class="setting-row">
                     <span class="sr-label">MVU变量简约模式</span>
-                    <div class="glass-toggle" id="minimal-toggle-btn" onclick="toggleMinimalMode(event)" title="开启后简化状态栏显示，仅保留核心信息">
+                    <div class="help-btn" onclick="toggleMinimalHelp(event)" title="这是什么？">?</div>
+                    <div class="glass-toggle" id="minimal-toggle-btn" onclick="toggleMinimalMode(event)" title="实验性功能：对AI隐藏大部分变量信息与更新规则">
                         <div class="toggle-circle"></div>
                     </div>
+                </div>
+                <div class="help-popover" id="minimal-help-popover">
+                    【实验性功能】开启后会把大部分变量的信息和更新规则对AI隐藏，仅保留：主角基本信息（身份/性别）、关键女性角色的在场与性爱信息、剧情关键信息（事件/节点/目标）等。配合自己的数据库模板食用更佳——适合高级用户用其他模板替代默认变量体系，避免数据重复或冲突。如果你不懂这个按钮是干嘛的，永远不要动它。
                 </div>
 
                 <div class="setting-row">
                     <span class="sr-label">变量修改提示词注入</span>
+                    <div class="help-btn" onclick="toggleInjHelp(event)" title="这是什么？">?</div>
                     <div class="glass-toggle" id="inj-toggle-btn" onclick="toggleInjection(event)" title="开启后，手动修改变量会向AI发送提示词">
                         <div class="toggle-circle"></div>
                     </div>
-                    <div class="help-btn" onclick="toggleInjHelp(event)" title="这是什么？">?</div>
                 </div>
                 <div class="help-popover" id="inj-help-popover">
                     开启后，你在状态栏里手动修改的每一项变量（物品、剧情、角色状态等）都会以「系统最高优先级指令」的形式追加到输入框，通知AI这次改动，让AI据此续写。关闭时为静默模式：变量照常修改，但不会通知AI，AI可能无视你的改动。建议重置角色条目或重大改动时开启。
