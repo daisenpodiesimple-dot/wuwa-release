@@ -748,6 +748,25 @@
 
 
 <script type="module">
+    // ==========================================
+    // toastr 桥接：iframe 内没有 toastr，统一走父窗口（酒馆主界面）实例，
+    // 弹窗容器与 CSS 都在父窗口，手机端也能正常显示。用 getter 代理，现有 toastr.xxx 调用无需改动。
+    // ==========================================
+    try {
+        const _fxToastrHost = (typeof window.parent !== "undefined" && window.parent) || (typeof top !== "undefined" && top) || window;
+        Object.defineProperty(window, "toastr", {
+            configurable: true,
+            get() {
+                try { return _fxToastrHost.toastr; } catch (e) { return undefined; }
+            },
+            set(v) { /* 忽略外部赋值，始终走父窗口实例 */ }
+        });
+        // 设默认 options（写父窗口实例）
+        if (_fxToastrHost.toastr && _fxToastrHost.toastr.options) {
+            _fxToastrHost.toastr.options = { "positionClass": "toast-top-center", "timeOut": "4000" };
+        }
+    } catch (e) { console.warn("[StatusBar] toastr 桥接失败", e); }
+
     // 好感度 → 态度标签映射（与逻辑核心.js 中 getAttitudeByFavorability 严格对齐）
     function getAttitudeTag(favorability) {
         const fav = Number(favorability) || 0;
