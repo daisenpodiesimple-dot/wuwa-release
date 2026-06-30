@@ -793,6 +793,15 @@ let currentChatChar = null;
             if (mvuData?.stat_data?.['剧情权重'] !== undefined) return Number(mvuData.stat_data['剧情权重']);
         } catch (e) {} return 0; 
     }
+    // 【提前解锁】读取楼层变量 stat_data._已知角色名单（出场过的角色），用于运行时合并解锁判定
+    function getKnownCharSet() {
+        try {
+            const mvuData = getVariables({ type: 'message', message_id: -1 });
+            const arr = mvuData?.stat_data?.['_已知角色名单'];
+            if (Array.isArray(arr)) return new Set(arr);
+        } catch (e) {}
+        return new Set();
+    }
 
     function getRoverStatus() {
         try {
@@ -1805,11 +1814,17 @@ ${getAntiMechPrompt()}
         await saveProactiveConfig(cfgAfterFloor);
 
         // 概率命中
-        if (Math.random() * 100 >= cfgAfterFloor.probability) return;
+        if (Math.random() * 100 >= cfgAfterFloor.probability) {
+            await saveProactiveConfig({ ...cfgAfterFloor, last_result: 'miss_prob', last_result_name: '' });
+            return;
+        }
 
         // 候选人
         const candidates = buildProactiveCandidates(cfgAfterFloor);
-        if (candidates.length === 0) return;
+        if (candidates.length === 0) {
+            await saveProactiveConfig({ ...cfgAfterFloor, last_result: 'miss_nocand', last_result_name: '' });
+            return;
+        }
 
         const target = pickProactiveChar(candidates, cfgAfterFloor);
         if (!target) return;
@@ -1822,6 +1837,8 @@ ${getAntiMechPrompt()}
         // 命中：更新 recent_names，入队
         const newConfig = { ...cfgAfterFloor };
         newConfig.recent_names = (cfgAfterFloor.recent_names || []).concat(target).slice(-10);
+        newConfig.last_result = 'hit';
+        newConfig.last_result_name = target;
         await saveProactiveConfig(newConfig);
 
         const userName = getPlayerName();
@@ -3090,7 +3107,7 @@ ${historyText}
                         <div style="font-size:13px; display:flex; flex-direction:column;">
                             <span>反机械化反数据</span>
                             <span style="font-size:10px; color:var(--fx-time);">肘击AI让它写通俗易懂的感性表达</span>
-                        </div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-antimech"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>隐藏正文注入</span><span style="font-size:10px; color:var(--fx-time);">将物理注入至正文的记录文本设为空</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-hideinject"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; display:flex; flex-direction:column;"><span>选择记录注入方式</span><span style="font-size:10px; color:var(--fx-time);">切换为世界书模式可保持正文干净</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-chat" style="color:#4a9eff; font-weight:bold;">正文</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-injectmode"><span class="fx-slider"></span></label><span id="fx-lbl-wb" style="color:var(--fx-time);">世界书</span></div></div><div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; font-weight:bold; color:var(--fx-text);">主动消息（角色主动发来飞讯）</div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>启用主动消息</span><span style="font-size:10px; color:var(--fx-time);">AI 回复结束后按间隔与概率触发</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-enabled"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>好感度加权</span><span style="font-size:10px; color:var(--fx-time);">关系越亲密越可能主动联系</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-aff"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>连发抑制</span><span style="font-size:10px; color:var(--fx-time);">同一角色连续两次后强制换人</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-streak"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>触发通知</span><span style="font-size:10px; color:var(--fx-time);">主动消息触发时弹窗提示（默认静默）</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-notify"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>触发模式</span><span style="font-size:10px; color:var(--fx-time);">默认=出场后退场角色；自定义=自选白名单</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-promode-def" style="color:#4a9eff; font-weight:bold;">默认</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-mode"><span class="fx-slider"></span></label><span id="fx-lbl-promode-cus" style="color:var(--fx-time);">自定义</span></div></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>自定义白名单</span><span style="font-size:10px; color:var(--fx-time);">仅自定义模式下生效</span></div><button class="fx-btn" id="fx-cfg-proactive-whitelist" style="font-size:12px;">管理白名单</button></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>触发间隔（楼层数）</span> <span id="val-profloor" style="color:#4a9eff; font-weight:bold;">6</span></div><input type="range" id="fx-cfg-profloor" min="2" max="20" value="6" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>触发概率（%）</span> <span id="val-proprob" style="color:#4a9eff; font-weight:bold;">35</span></div><input type="range" id="fx-cfg-proprob" min="5" max="100" value="35" style="width:100%;"></div></div></div><div class="fx-modal-footer"><button class="fx-btn" id="fx-clear-img-cache" style="white-space:nowrap;">清除缓存并重新加载</button><button class="fx-btn fx-btn-primary" id="fx-close-settings">完成</button></div></div></div>
+                        </div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-antimech"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>隐藏正文注入</span><span style="font-size:10px; color:var(--fx-time);">将物理注入至正文的记录文本设为空</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-hideinject"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; display:flex; flex-direction:column;"><span>选择记录注入方式</span><span style="font-size:10px; color:var(--fx-time);">切换为世界书模式可保持正文干净</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-chat" style="color:#4a9eff; font-weight:bold;">正文</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-injectmode"><span class="fx-slider"></span></label><span id="fx-lbl-wb" style="color:var(--fx-time);">世界书</span></div></div><div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; padding-top:10px; border-top:1px solid var(--fx-border);"><div style="font-size:13px; font-weight:bold; color:var(--fx-text);">主动消息（角色主动发来飞讯）</div><div id="fx-proactive-monitor" style="font-size:11px; color:var(--fx-time); background:rgba(74,158,255,0.06); border:1px solid var(--fx-border); border-radius:6px; padding:8px; line-height:1.6;"></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>启用主动消息</span><span style="font-size:10px; color:var(--fx-time);">AI 回复结束后按间隔与概率触发</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-enabled"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>好感度加权</span><span style="font-size:10px; color:var(--fx-time);">关系越亲密越可能主动联系</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-aff"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>连发抑制</span><span style="font-size:10px; color:var(--fx-time);">同一角色连续两次后强制换人</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-streak"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>触发通知</span><span style="font-size:10px; color:var(--fx-time);">主动消息触发时弹窗提示（默认静默）</span></div><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-notify"><span class="fx-slider"></span></label></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>触发模式</span><span style="font-size:10px; color:var(--fx-time);">默认=出场后退场角色；自定义=自选白名单</span></div><div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span id="fx-lbl-promode-def" style="color:#4a9eff; font-weight:bold;">默认</span><label class="fx-toggle"><input type="checkbox" id="fx-cfg-proactive-mode"><span class="fx-slider"></span></label><span id="fx-lbl-promode-cus" style="color:var(--fx-time);">自定义</span></div></div><div style="display:flex; justify-content:space-between; align-items:center;"><div style="font-size:13px; display:flex; flex-direction:column;"><span>自定义白名单</span><span style="font-size:10px; color:var(--fx-time);">仅自定义模式下生效</span></div><button class="fx-btn" id="fx-cfg-proactive-whitelist" style="font-size:12px;">管理白名单</button></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>触发间隔（楼层数）</span> <span id="val-profloor" style="color:#4a9eff; font-weight:bold;">6</span></div><input type="range" id="fx-cfg-profloor" min="2" max="20" value="6" style="width:100%;"></div><div style="display:flex; flex-direction:column; gap:5px;"><div style="display:flex; justify-content:space-between; font-size:13px;"><span>触发概率（%）</span> <span id="val-proprob" style="color:#4a9eff; font-weight:bold;">35</span></div><input type="range" id="fx-cfg-proprob" min="5" max="100" value="35" style="width:100%;"></div></div></div><div class="fx-modal-footer"><button class="fx-btn" id="fx-clear-img-cache" style="white-space:nowrap;">清除缓存并重新加载</button><button class="fx-btn fx-btn-primary" id="fx-close-settings">完成</button></div></div></div>
         <div class="fx-modal" id="fx-summary-modal">
             <div class="fx-modal-content" style="width: 360px; max-height: 85vh; display: flex; flex-direction: column;">
                 <div class="fx-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -3286,6 +3303,7 @@ ${historyText}
         const $list = p$('#fx-contact-container').empty();
         const currentPlotWeight = getCurrentPlotWeight();
         const forcedUnlocks = getVariables({type: 'chat'})?.fx_forced_unlocks || [];
+        const knownSet = getKnownCharSet(); // 【提前解锁】已知角色名单
         const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
         const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
         const unreadCounts = getUnreadCounts();
@@ -3312,7 +3330,7 @@ ${historyText}
             }
             displayList.push({ 
                 key, isGroup: false, data, 
-                isUnlocked: (currentPlotWeight > data.plotWeight) || forcedUnlocks.includes(key), 
+                isUnlocked: (currentPlotWeight > data.plotWeight) || forcedUnlocks.includes(key) || knownSet.has(key), 
                 isForced: forcedUnlocks.includes(key), isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key), 
                 isCustomChar: customCharKeys.includes(key) 
             });
@@ -3753,6 +3771,21 @@ async function executeCloseFeixun() {
                 p$('#fx-cfg-proprob').val(pros.probability); p$('#val-proprob').text(pros.probability);
                 p$('#fx-cfg-profloor').off('input').on('input', function(){ p$('#val-profloor').text(p$(this).val()); });
                 p$('#fx-cfg-proprob').off('input').on('input', function(){ p$('#val-proprob').text(p$(this).val()); });
+
+                // 【状态监控】渲染主动消息触发状态
+                const mp = getProactiveConfig();
+                const nextFloor = mp.last_floor + mp.floor_gap;
+                const lastName = mp.last_result_name ? getDisplayName(mp.last_result_name) : '—';
+                let resultText = '—';
+                if (mp.last_result === 'hit') resultText = '成功（已发送）';
+                else if (mp.last_result === 'miss_prob') resultText = '未中（概率未命中）';
+                else if (mp.last_result === 'miss_nocand') resultText = '未中（无合格候选人）';
+                p$('#fx-proactive-monitor').html(
+                    '上次触发楼层：<b style="color:var(--fx-text)">' + mp.last_floor + '</b>　|　' +
+                    '下次触发楼层：<b style="color:var(--fx-text)">' + nextFloor + '</b><br>' +
+                    '上次触发角色：<b style="color:var(--fx-text)">' + lastName + '</b>　|　' +
+                    '上次结果：<b style="color:var(--fx-text)">' + resultText + '</b>'
+                );
             };
 
             const saveSettings = async () => {
@@ -3802,6 +3835,7 @@ async function executeCloseFeixun() {
                 const $list = p$('#fx-proactive-wl-list').empty();
                 const plotW = getCurrentPlotWeight();
                 const forced = getVariables({type: 'chat'})?.fx_forced_unlocks || [];
+                const knownSet = getKnownCharSet(); // 【提前解锁】
                 const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
                 const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
                 const roverStatus = getRoverStatus();
@@ -3816,7 +3850,7 @@ async function executeCloseFeixun() {
                         if (!isRoverValid) return;
                     }
                     const data = FEIXUN_DB.characters[key];
-                    if ((plotW > data.plotWeight) || forced.includes(key)) {
+                    if ((plotW > data.plotWeight) || forced.includes(key) || knownSet.has(key)) {
                         available.push({ key, data, isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key) });
                     }
                 });
@@ -4239,6 +4273,7 @@ async function executeCloseFeixun() {
                 const $list = p$('#fx-group-members-list').empty();
                 const plotW = getCurrentPlotWeight(); 
                 const forced = getVariables({type: 'chat'})?.fx_forced_unlocks || [];
+                const knownSet = getKnownCharSet(); // 【提前解锁】
                 const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
                 const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
                 const roverStatus = getRoverStatus(); // 【新增】获取漂泊者状态
@@ -4256,7 +4291,7 @@ async function executeCloseFeixun() {
                     }
                     
                     const data = FEIXUN_DB.characters[key];
-                    const isUnlocked = (plotW > data.plotWeight) || forced.includes(key);
+                    const isUnlocked = (plotW > data.plotWeight) || forced.includes(key) || knownSet.has(key);
                     if (isUnlocked) {
                         availableChars.push({ key, data, isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key) });
                     }
@@ -4364,6 +4399,7 @@ async function executeCloseFeixun() {
                 const $list = p$('#fx-grm-invite-list').empty();
                 const plotW = getCurrentPlotWeight();
                 const forced = getVariables({type: 'chat'})?.fx_forced_unlocks || [];
+                const knownSet = getKnownCharSet(); // 【提前解锁】
                 const pinnedChars = getVariables({type: 'chat'})?.fx_pinned_chars || [];
                 const bottomChars = getVariables({type: 'chat'})?.fx_bottom_chars || [];
                 const roverStatus = getRoverStatus();
@@ -4379,7 +4415,7 @@ async function executeCloseFeixun() {
                         if (!isRoverValid) return;
                     }
                     const data = FEIXUN_DB.characters[key];
-                    if ((plotW > data.plotWeight) || forced.includes(key)) {
+                    if ((plotW > data.plotWeight) || forced.includes(key) || knownSet.has(key)) {
                         available.push({ key, data, isPinned: pinnedChars.includes(key), isBottom: bottomChars.includes(key) });
                     }
                 });
