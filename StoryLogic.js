@@ -69,14 +69,17 @@ function getStoryDisplayString(majorVerIdx, partIdx, isPostScript) {
 // 0.5 好感度 → 态度映射函数
 // ==========================================
 function getAttitudeByFavorability(favorability) {
-    if (favorability < 10) return '心怀戒备与排斥，将主角视为不受欢迎的存在，内心抵触与之有所牵扯';
-    if (favorability < 20) return '感到生疏，对主角尚不熟悉，内心未对其建立明确印象，谈不上喜恶';
-    if (favorability < 40) return '态度中立，对主角既无特别好感也无明显恶感，视为普通的相识之人';
-    if (favorability < 60) return '相处熟络，对主角已不再陌生，内心将其视作认识的人，相处时较为自在';
-    if (favorability < 70) return '心怀好感，对主角抱有正面的情感倾向，内心愿意与之建立更深的联系';
-    if (favorability < 80) return '情感亲近，对主角有明显的喜爱与信赖，内心将其视为值得在意的人';
-    if (favorability < 90) return '情意深厚，对主角怀有真切的爱慕，内心将其视为格外重要、令自己心动的存在';
-    return '情根深种，对主角的爱意真挚而深沉，内心将其视为珍视至极、难以割舍的人';
+    if (favorability < 10) return '对主角心怀戒备与排斥，将其视为不受欢迎的存在，本能地抵触与之有所牵扯';
+    if (favorability < 20) return '对主角尚不熟悉，内心未建立明确印象，彼此间谈不上喜恶';
+    if (favorability < 30) return '对主角既无特别好感也无明显恶感，视为普通的相识之人';
+    if (favorability < 40) return '与主角有过一些往来，算得上脸熟，但还称不上了解，相处仍带客套';
+    if (favorability < 50) return '与主角已不再陌生，内心将其视作认识的人，相处时较为自在';
+    if (favorability < 60) return '对主角抱有正面的情感倾向，内心愿意与之建立更深的联系';
+    if (favorability < 70) return '对主角的在意已超出寻常好感，内心格外留心对方的一举一动';
+    if (favorability < 80) return '对主角有明显的喜爱与信赖，内心将其视为值得在意的人';
+    if (favorability < 90) return '对主角怀有真切的爱慕，内心将其视为格外重要、令自己心动的人';
+    if (favorability < 100) return '对主角的爱意真挚而笃定，内心已将其视作不可替代的存在';
+    return '对主角的爱意真挚而深沉，内心将其视为珍视至极、难以割舍的人';
 }
 // ==========================================
 // 1. 核心逻辑处理函数 (保持原样)
