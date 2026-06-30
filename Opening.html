@@ -574,15 +574,20 @@ $(async function() {
     // 0. 穿透引擎与API获取
     // ==========================================
     const ST_WIN = window.parent || window || top;
-    // 通知统一走酒馆的 toastr（父窗口），弹在酒馆主界面而非 html 内
+    // ==========================================
+    // toastr 桥接：iframe 内没有 toastr，统一走父窗口（酒馆主界面）实例。
+    // 弹窗容器与 CSS 都在父窗口，手机端也能正常显示。用 getter 代理，现有 toastr.xxx 调用无需改动。
+    // ==========================================
     try {
-        if (typeof ST_WIN.toastr === "object" && ST_WIN.toastr) {
-            window.toastr = ST_WIN.toastr;
+        Object.defineProperty(window, "toastr", {
+            configurable: true,
+            get() { try { return ST_WIN.toastr; } catch (e) { return undefined; } },
+            set(v) { /* 忽略外部赋值，始终走父窗口实例 */ }
+        });
+        if (ST_WIN.toastr && ST_WIN.toastr.options) {
+            ST_WIN.toastr.options = { "positionClass": "toast-top-center", "timeOut": "4000" };
         }
     } catch (e) {}
-    if (typeof toastr !== "undefined" && toastr && toastr.options) {
-        toastr.options = { "positionClass": "toast-bottom-right", "timeOut": "4000" };
-    }
     function getSTFn(fnName) {
         if (typeof ST_WIN[fnName] === 'function') return ST_WIN[fnName];
         if (typeof globalThis !== 'undefined' && typeof globalThis[fnName] === 'function') return globalThis[fnName];
