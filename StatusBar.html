@@ -1956,6 +1956,7 @@
             if(!mvuData.stat_data.NPC漂泊者) mvuData.stat_data.NPC漂泊者 = {};
             mvuData.stat_data.NPC漂泊者.是否存在 = newExists;
             if(newExists) mvuData.stat_data.NPC漂泊者.性别 = newGender;
+            window.__fxUserNpcEdit = Date.now(); // 【NPC漂泊者保护】标记用户操作，放行拦截
             mvuData.stat_data = tryApplyStoryLogic(mvuData.stat_data);
             await Mvu.replaceMvuData(mvuData, { type: 'message', message_id: -1 });
             injectChangePrompt(`玩家修改了【NPC漂泊者】的设定！状态变更为：${newExists ? '存在 ('+newGender+')' : '不存在'}。`);
