@@ -720,6 +720,34 @@ async function applyStrategyChanges(bookName, strategyOps, silent = false) {
   }
 }
 
+// 清理残留自动蓝灯：导入卡/重置后，世界书条目自带的 constant(蓝灯)状态
+// 若不在 manualBlueUids(用户手动设的)里，则是卡带过来的残留自动蓝灯，降级回 selective(绿灯)，
+// 让当前聊天的剧情重新驱动自动蓝灯。只动世界书条目 strategy，不碰任何全局变量。
+async function cleanupResidualAutoBlue(localData) {
+  const stories = (localData && localData.stories) || [];
+  const summaries = (localData && localData.summaries) || [];
+  const allItems = [...stories, ...summaries];
+  if (allItems.length === 0) return false;
+  const mode = SWITCHER_STATE.simpTradMode;
+  const opsByBook = {};
+  allItems.forEach((item) => {
+    // 手动蓝灯(manualBlueUids)完全保留，不动
+    if (manualBlueUids.includes(item.uid)) return;
+    const strategy = item.strategy || {};
+    // 非手动但处于 constant(蓝灯) = 残留自动蓝灯，降级回 selective(绿灯)
+    if (strategy.type === 'constant') {
+      if (!matchSimpTradMode(item.simpTrad, mode)) return; // 只处理当前简繁模式
+      if (!opsByBook[item.bookName]) opsByBook[item.bookName] = [];
+      opsByBook[item.bookName].push({ uid: item.uid, strategy: { ...strategy, type: 'selective' } });
+    }
+  });
+  const bookNames = Object.keys(opsByBook);
+  for (const bookName of bookNames) {
+    await applyStrategyChanges(bookName, opsByBook[bookName], true);
+  }
+  return bookNames.length > 0;
+}
+
 async function syncAutoBlueStrategies(localData, displayText) {
   const stories = (localData && localData.stories) || [];
   const summaries = (localData && localData.summaries) || [];
