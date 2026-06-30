@@ -999,7 +999,9 @@
                     if (w > 800) { h = Math.round(h * 800 / w); w = 800; }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/webp', 0.85);
+                    let dataUrl;
+                    try { dataUrl = canvas.toDataURL('image/webp', 0.85); }
+                    catch (e2) { dataUrl = canvas.toDataURL('image/png'); }
                     const tx = portraitDB.transaction([PORTRAIT_STORE], 'readwrite');
                     tx.objectStore(PORTRAIT_STORE).put(dataUrl, 'custom_' + name);
                     tx.oncomplete = () => { customPortraitCache[name] = dataUrl; tabRendered['page-chars'] = false; resolve(dataUrl); };
