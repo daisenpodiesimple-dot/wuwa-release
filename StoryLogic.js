@@ -1298,6 +1298,23 @@ eventOn(Mvu.events.VARIABLE_UPDATE_ENDED, async (vars, oldVars) => {
                 }
             });
         }
+
+        // 【NPC漂泊者保护】拦截 AI 对 stat_data.NPC漂泊者 的擅自修改。
+        // '是否存在'是世界设定（有无此NPC），不是'是否在场'。用户选定后不得改。
+        // 仅拦 AI：状态栏 editNPCRover 改前会设 window.__fxUserNpcEdit 时间窗标记，标记有效则放行。
+        try {
+            const oldNpc = oldVars?.stat_data?.NPC漂泊者;
+            const newNpc = vars?.stat_data?.NPC漂泊者;
+            if (oldNpc && newNpc && JSON.stringify(oldNpc) !== JSON.stringify(newNpc)) {
+                const userEditTs = (typeof window !== 'undefined') ? window.__fxUserNpcEdit : 0;
+                const isUserEdit = userEditTs && (Date.now() - userEditTs < 3000);
+                if (!isUserEdit) {
+                    console.warn('[StoryCtrl] 拦截 AI 修改 NPC漂泊者，已还原:', newNpc, '->', oldNpc);
+                    vars.stat_data.NPC漂泊者 = _.cloneDeep(oldNpc);
+                }
+            }
+        } catch (e) { console.warn('[StoryCtrl] NPC漂泊者拦截异常', e); }
+
         await runLogicFlow(vars);
     });
 
