@@ -1839,10 +1839,11 @@ ${getAntiMechPrompt()}
         // 间隔判定：当前楼层 - 上次触发楼层 >= floor_gap。未达间隔直接返回（不消耗判定机会）
         if (latestId - config.last_floor < config.floor_gap) return;
 
-        // 已达间隔点：无论后续命中与否，都刷新 last_floor，重新开始计 N 层（这才是真正的冷却）
-        // 先刷新楼层，再判定概率/候选人
+        // 已达间隔点。刷新 last_floor 的时机分情况：
+        //  - 概率没中：刷新(概率才有效)，等下一轮
+        //  - 无候选：不刷新，下一层立刻再判
+        //  - 命中入队：刷新；若生成时 skip 则由 processProactiveTask 回滚 last_floor
         const cfgAfterFloor = { ...config, last_floor: latestId };
-        await saveProactiveConfig(cfgAfterFloor);
 
         // 概率命中
         if (Math.random() * 100 >= cfgAfterFloor.probability) {
@@ -1850,14 +1851,14 @@ ${getAntiMechPrompt()}
             return;
         }
 
-        // 候选人
-        const candidates = buildProactiveCandidates(cfgAfterFloor);
+        // 候选人：无候选不刷新 last_floor，下一层立刻再判
+        const candidates = buildProactiveCandidates(config);
         if (candidates.length === 0) {
-            await saveProactiveConfig({ ...cfgAfterFloor, last_result: 'miss_nocand', last_result_name: '' });
+            await saveProactiveConfig({ ...config, last_result: 'miss_nocand', last_result_name: '' });
             return;
         }
 
-        const target = pickProactiveChar(candidates, cfgAfterFloor);
+        const target = pickProactiveChar(candidates, config);
         if (!target) return;
 
         // 【通知】读取全局配置(默认开启)，弹 Toastr 告知触发者
@@ -1865,9 +1866,9 @@ ${getAntiMechPrompt()}
             try { if (typeof notify === 'function') notify('info', '【' + getDisplayName(target) + '】主动给你发来了一条飞讯'); } catch (e) {}
         }
 
-        // 命中：更新 recent_names，入队
+        // 命中：刷新 last_floor + 更新 recent_names，入队
         const newConfig = { ...cfgAfterFloor };
-        newConfig.recent_names = (cfgAfterFloor.recent_names || []).concat(target).slice(-10);
+        newConfig.recent_names = (config.recent_names || []).concat(target).slice(-10);
         newConfig.last_result = 'hit';
         newConfig.last_result_name = target;
         await saveProactiveConfig(newConfig);
@@ -1876,7 +1877,7 @@ ${getAntiMechPrompt()}
         const gameTime = getCurrentGameTime();
         const cfgGlobal = getFxGlobalConfig();
         enqueueTask({
-            type: 'proactive', charKey: target,
+            type: 'proactive', charKey: target, _prevLastFloor: config.last_floor,
             payload: {
                 charKey: target, userName: userName, gameTime: gameTime,
                 displayName: getDisplayName(target), charSignature: FEIXUN_DB.characters[target]?.signature || '无',
@@ -1917,7 +1918,7 @@ ${getAntiMechPrompt()}
         const gameTime = getCurrentGameTime();
         const cfgGlobal = getFxGlobalConfig();
         enqueueTask({
-            type: 'proactive', charKey: target, _manualReport: true,
+            type: 'proactive', charKey: target, _prevLastFloor: config.last_floor, _manualReport: true,
             payload: {
                 charKey: target, userName: userName, gameTime: gameTime,
                 displayName: getDisplayName(target), charSignature: FEIXUN_DB.characters[target]?.signature || '无',
@@ -2015,6 +2016,14 @@ ${getAntiMechPrompt()}
             // skip 标签宽松匹配：命中 <fx_skip 或 fx_skip> 任一，整单作废，不写消息、不刷未读
             if (/<fx_skip/i.test(aiResponse) || /fx_skip>/i.test(aiResponse)) {
                 if (task._manualReport && typeof notify === 'function') notify('warning', '【' + displayName + '】当前状态无法发消息（已跳过）');
+                // 回滚 last_floor：skip 没成事，下一层立刻可再判
+                try {
+                    const rc = getProactiveConfig();
+                    rc.last_result = 'miss_skip';
+                    rc.last_result_name = charKey;
+                    if (typeof task._prevLastFloor === 'number') rc.last_floor = task._prevLastFloor;
+                    await saveProactiveConfig(rc);
+                } catch (e) {}
                 return;
             }
 
