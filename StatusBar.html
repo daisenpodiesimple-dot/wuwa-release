@@ -702,11 +702,14 @@
     }
     .att-hostile  { background: rgba(127, 29, 29, 0.55);   color: #fecaca; border-color: rgba(248, 113, 113, 0.5); }
     .att-distant  { background: rgba(51, 65, 85, 0.55);    color: #cbd5e1; border-color: rgba(148, 163, 184, 0.5); }
-    .att-neutral  { background: rgba(75, 85, 99, 0.55);    color: #e5e7eb; border-color: rgba(156, 163, 175, 0.5); }
-    .att-familiar { background: rgba(15, 118, 110, 0.55);  color: #99f6e4; border-color: rgba(45, 212, 191, 0.5); }
-    .att-fond     { background: rgba(22, 101, 52, 0.55);   color: #bbf7d0; border-color: rgba(74, 222, 128, 0.5); }
-    .att-close    { background: rgba(157, 23, 77, 0.55);   color: #fbcfe8; border-color: rgba(244, 114, 182, 0.5); }
-    .att-love     { background: rgba(134, 25, 143, 0.55);  color: #f5d0fe; border-color: rgba(232, 121, 249, 0.5); }
+    .att-neutral     { background: rgba(75, 85, 99, 0.55);    color: #e5e7eb; border-color: rgba(156, 163, 175, 0.5); }
+    .att-acquainted  { background: rgba(31, 87, 56, 0.55);    color: #d1fae5; border-color: rgba(110, 231, 183, 0.45); }
+    .att-familiar    { background: rgba(15, 118, 110, 0.55);  color: #99f6e4; border-color: rgba(45, 212, 191, 0.5); }
+    .att-fond        { background: rgba(22, 101, 52, 0.55);   color: #bbf7d0; border-color: rgba(74, 222, 128, 0.5); }
+    .att-crush       { background: rgba(120, 53, 15, 0.5);    color: #fed7aa; border-color: rgba(251, 146, 60, 0.45); }
+    .att-close       { background: rgba(157, 23, 77, 0.55);   color: #fbcfe8; border-color: rgba(244, 114, 182, 0.5); }
+    .att-attached    { background: rgba(131, 24, 67, 0.55);   color: #fbcfe8; border-color: rgba(244, 114, 182, 0.55); }
+    .att-love        { background: rgba(134, 25, 143, 0.55);  color: #f5d0fe; border-color: rgba(232, 121, 249, 0.5); }
     .att-devoted  { background: rgba(159, 18, 57, 0.6);    color: #ffe4e6; border-color: rgba(251, 113, 133, 0.6); }
     /* === 角色名旁的极简工具图标（重置/删除）=== */
     .char-tool-icons {
@@ -770,13 +773,16 @@
     // 好感度 → 态度标签映射（与逻辑核心.js 中 getAttitudeByFavorability 严格对齐）
     function getAttitudeTag(favorability) {
         const fav = Number(favorability) || 0;
-        if (fav < 10) return { text: '戒备', cls: 'att-hostile' };
+        if (fav < 10) return { text: '排斥', cls: 'att-hostile' };
         if (fav < 20) return { text: '生疏', cls: 'att-distant' };
-        if (fav < 40) return { text: '中立', cls: 'att-neutral' };
-        if (fav < 60) return { text: '熟络', cls: 'att-familiar' };
-        if (fav < 70) return { text: '好感', cls: 'att-fond' };
+        if (fav < 30) return { text: '中立', cls: 'att-neutral' };
+        if (fav < 40) return { text: '眼熟', cls: 'att-acquainted' };
+        if (fav < 50) return { text: '熟络', cls: 'att-familiar' };
+        if (fav < 60) return { text: '好感', cls: 'att-fond' };
+        if (fav < 70) return { text: '心动', cls: 'att-crush' };
         if (fav < 80) return { text: '亲近', cls: 'att-close' };
-        if (fav < 90) return { text: '爱意', cls: 'att-love' };
+        if (fav < 90) return { text: '眷恋', cls: 'att-attached' };
+        if (fav < 100) return { text: '深爱', cls: 'att-love' };
         return { text: '挚爱', cls: 'att-devoted' };
     }
 
