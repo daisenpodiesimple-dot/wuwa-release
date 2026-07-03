@@ -706,10 +706,10 @@
     .att-acquainted  { background: rgba(31, 87, 56, 0.55);    color: #d1fae5; border-color: rgba(110, 231, 183, 0.45); }
     .att-familiar    { background: rgba(15, 118, 110, 0.55);  color: #99f6e4; border-color: rgba(45, 212, 191, 0.5); }
     .att-fond        { background: rgba(22, 101, 52, 0.55);   color: #bbf7d0; border-color: rgba(74, 222, 128, 0.5); }
+    .att-mindful     { background: rgba(101, 91, 20, 0.5);    color: #fef08a; border-color: rgba(234, 179, 8, 0.45); }
     .att-crush       { background: rgba(120, 53, 15, 0.5);    color: #fed7aa; border-color: rgba(251, 146, 60, 0.45); }
     .att-close       { background: rgba(157, 23, 77, 0.55);   color: #fbcfe8; border-color: rgba(244, 114, 182, 0.5); }
-    .att-attached    { background: rgba(131, 24, 67, 0.55);   color: #fbcfe8; border-color: rgba(244, 114, 182, 0.55); }
-    .att-love        { background: rgba(134, 25, 143, 0.55);  color: #f5d0fe; border-color: rgba(232, 121, 249, 0.5); }
+    .att-attached    { background: rgba(134, 25, 143, 0.55);  color: #f5d0fe; border-color: rgba(232, 121, 249, 0.5); }
     .att-devoted  { background: rgba(159, 18, 57, 0.6);    color: #ffe4e6; border-color: rgba(251, 113, 133, 0.6); }
     /* === 角色名旁的极简工具图标（重置/删除）=== */
     .char-tool-icons {
@@ -779,10 +779,10 @@
         if (fav < 40) return { text: '眼熟', cls: 'att-acquainted' };
         if (fav < 50) return { text: '熟络', cls: 'att-familiar' };
         if (fav < 60) return { text: '好感', cls: 'att-fond' };
-        if (fav < 70) return { text: '心动', cls: 'att-crush' };
-        if (fav < 80) return { text: '亲近', cls: 'att-close' };
-        if (fav < 90) return { text: '眷恋', cls: 'att-attached' };
-        if (fav < 100) return { text: '深爱', cls: 'att-love' };
+        if (fav < 70) return { text: '在意', cls: 'att-mindful' };
+        if (fav < 80) return { text: '心动', cls: 'att-crush' };
+        if (fav < 90) return { text: '亲近', cls: 'att-close' };
+        if (fav < 100) return { text: '眷恋', cls: 'att-attached' };
         return { text: '挚爱', cls: 'att-devoted' };
     }
 
