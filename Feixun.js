@@ -167,6 +167,12 @@ let currentChatChar = null;
                 signature: "睨睆苍翩，啾啾其鸣。",
                 plotWeight: 1000
             },
+            "维里奈": {
+                name: "维里奈",
+                avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/weilinai.webp",
+                signature: "需要向导的话，维里奈随时有空哦。",
+                plotWeight: 1002
+            },
             "炽霞": {
                 name: "炽霞",
                 avatar: "https://testingcf.jsdelivr.net/gh/daisenpodiesimple-dot/wuwa-release@main/Avatars/chixia.webp",
