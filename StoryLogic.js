@@ -75,11 +75,11 @@ function getAttitudeByFavorability(favorability) {
     if (favorability < 40) return '与主角有过一些往来，算得上脸熟，但还称不上了解，相处仍带客套';
     if (favorability < 50) return '与主角已不再陌生，内心将其视作认识的人，相处时较为自在';
     if (favorability < 60) return '对主角抱有正面的情感倾向，内心愿意与之建立更深的联系';
-    if (favorability < 70) return '对主角的在意已超出寻常好感，内心格外留心对方的一举一动';
-    if (favorability < 80) return '对主角有明显的喜爱与信赖，内心将其视为值得在意的人';
-    if (favorability < 90) return '对主角怀有真切的爱慕，内心将其视为格外重要、令自己心动的人';
-    if (favorability < 100) return '对主角的爱意真挚而笃定，内心已将其视作不可替代的存在';
-    return '对主角的爱意真挚而深沉，内心将其视为珍视至极、难以割舍的人';
+    if (favorability < 70) return '会不自觉地留意主角的动向，对方的言行容易牵动自己的情绪';
+    if (favorability < 80) return '对主角的在意已越过寻常朋友的界限，内心生出难以言说的悸动';
+    if (favorability < 90) return '对主角有明显的喜爱与信赖，愿意让其走进自己的世界';
+    if (favorability < 100) return '对主角怀有真切的爱慕，离开时会牵挂，相见时会安心';
+    return '对主角的爱意深沉而坚定，视其为珍视至极、再难割舍的存在';
 }
 // ==========================================
 // 1. 核心逻辑处理函数 (保持原样)
