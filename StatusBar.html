@@ -176,8 +176,8 @@
         border: 1px solid var(--accent-border); font-size: 11px;
         flex: 0 0 auto; white-space: nowrap;
     }
-    .head-editable { cursor: pointer; transition: 0.2s ease; border-radius: 4px; }
-    .head-editable:hover { outline: 1px solid var(--accent-border); outline-offset: 1px; border-radius: 4px; }
+    .head-editable { cursor: pointer; transition: box-shadow 0.2s ease, text-shadow 0.2s ease; border-radius: 4px; padding: 0 3px; }
+    .head-editable:hover { box-shadow: inset 0 0 0 100px var(--overlay-mid); text-shadow: 0 0 5px var(--accent-dim); }
 
     /* === 玻璃态 Toggle 开关 === */
     .glass-toggle {
