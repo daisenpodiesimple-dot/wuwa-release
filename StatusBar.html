@@ -2228,8 +2228,8 @@
 
     function renderHeader(sd) {
         const safe = (v, def='--') => (v !== undefined && v !== null && v !== '') ? v : def;
-        $('#head-loc').html('📍 <span class="txt-gradient">' + safe(sd.所在地点, '未知区域') + '</span>');
-        $('#head-time').text(`${safe(sd.当前时间)}`);
+        $('#head-loc').html('📍 <span class="txt-gradient head-editable" title="双击修改地点">' + safe(sd.所在地点, '未知区域') + '</span>');
+        $('#head-time').html('<span class="head-editable" title="双击修改时间">' + `${safe(sd.当前时间)}` + '</span>');
         
         const btn = $('#inj-toggle-btn');
         if(btn.length) {
@@ -2764,11 +2764,10 @@
         $('.nav-btn').removeClass('active');
         
         // 地点/时间点击修改（阻止冒泡到 header，不触发展开收起）
-        // 地点/时间：单击延时判定，双击触发修改；单击延迟后才冒泡到 header 展开收起
+        // 地点/时间文字：单击延时判定，双击触发修改（事件委托到文字 span，空白区域不拦截）
         let fxHeadClickTimer = null;
         const fxHeadClickDelay = 250;
-        function fxHeadSingle(el) {
-            // 判定为单击：手动触发 header 的展开/收起逻辑
+        function fxHeadSingle() {
             const $card = $('.tide-card');
             if ($card.hasClass('expanded')) {
                 $card.removeClass('expanded');
@@ -2780,23 +2779,17 @@
                 else $('.nav-btn').first().click();
             }
         }
-        $('#head-loc').off('click dblclick').on('click', function(e) {
+        // 委托：只有点中 .head-editable 文字才进入延时/双击逻辑，点空白则正常冒泡到 header 展开/收起
+        $('#head-loc, #head-time').on('click dblclick', '.head-editable', function(e) {
             e.stopPropagation();
-            if (fxHeadClickTimer) { clearTimeout(fxHeadClickTimer); fxHeadClickTimer = null; return; } // 第二次点击=双击，交给dblclick
-            fxHeadClickTimer = setTimeout(() => { fxHeadClickTimer = null; fxHeadSingle(this); }, fxHeadClickDelay);
-        }).on('dblclick', function(e) {
-            e.stopPropagation();
-            if (fxHeadClickTimer) { clearTimeout(fxHeadClickTimer); fxHeadClickTimer = null; }
-            window.editLocation();
-        });
-        $('#head-time').off('click dblclick').on('click', function(e) {
-            e.stopPropagation();
+            const isLoc = ($(this).closest('#head-loc').length > 0);
+            if (e.type === 'dblclick') {
+                if (fxHeadClickTimer) { clearTimeout(fxHeadClickTimer); fxHeadClickTimer = null; }
+                if (isLoc) window.editLocation(); else window.editTime();
+                return;
+            }
             if (fxHeadClickTimer) { clearTimeout(fxHeadClickTimer); fxHeadClickTimer = null; return; }
-            fxHeadClickTimer = setTimeout(() => { fxHeadClickTimer = null; fxHeadSingle(this); }, fxHeadClickDelay);
-        }).on('dblclick', function(e) {
-            e.stopPropagation();
-            if (fxHeadClickTimer) { clearTimeout(fxHeadClickTimer); fxHeadClickTimer = null; }
-            window.editTime();
+            fxHeadClickTimer = setTimeout(() => { fxHeadClickTimer = null; fxHeadSingle(); }, fxHeadClickDelay);
         });
     }
     
@@ -2807,9 +2800,9 @@
 
 <div class="tide-card">
     <div class="tide-header">
-        <div class="loc-box head-editable" id="head-loc" title="点击修改地点">--</div>
+        <div class="loc-box" id="head-loc">--</div>
         <div class="header-right">
-             <div class="time-badge head-editable" id="head-time" title="点击修改时间">--</div>
+             <div class="time-badge" id="head-time">--</div>
              <div class="gear-btn" id="gear-settings-btn" onclick="openSettings(event)" title="设置">
                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                      <circle cx="12" cy="12" r="3"></circle>
@@ -2933,13 +2926,6 @@
                     开启后，你在状态栏里手动修改的每一项变量（物品、剧情、角色状态等）都会以「系统最高优先级指令」的形式追加到输入框，通知AI这次改动，让AI据此续写。关闭时为静默模式：变量照常修改，但不会通知AI，AI可能无视你的改动。建议重置角色条目或重大改动时开启。
                 </div>
 
-                <div class="custom-portrait-title" style="margin-top:14px;">快捷修改</div>
-                <div class="custom-hint" style="margin-bottom:8px;">也可双击顶部的地点或时间直接修改。</div>
-                <div class="setting-row" style="flex-wrap:wrap; gap:6px;">
-                    <span class="mini-reset-btn" onclick="editLocation()" title="修改当前地点" style="padding:4px 10px;">修改当前地点</span>
-                    <span class="mini-reset-btn" onclick="editTime()" title="修改当前时间" style="padding:4px 10px;">修改当前时间</span>
-                </div>
-
                 <div class="data-block">
                     <div class="custom-portrait-title">界面垂直边距</div>
                     <div class="custom-hint" style="margin-bottom:4px;">调整展开后的最大垂直边距。当前值：<span id="viewport-height-val">380</span>px</div>
@@ -2947,6 +2933,15 @@
                         <input type="range" id="viewport-height-slider" min="190" max="760" value="380" step="10" oninput="onViewportHeightChange(event)" style="flex:1; accent-color:var(--accent-color); min-width:100px;">
                         <span class="mini-reset-btn" onclick="resetViewportHeight(event)" title="恢复默认 380px">恢复默认</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="data-block">
+                <div class="block-header">快捷修改</div>
+                <div class="custom-hint" style="margin-bottom:8px;">点击下方按钮修改，或双击顶部的地点/时间直接修改。</div>
+                <div class="setting-row" style="flex-wrap:wrap; gap:8px;">
+                    <span class="mini-reset-btn" onclick="editLocation()" title="修改当前地点" style="padding:5px 12px;">修改当前地点</span>
+                    <span class="mini-reset-btn" onclick="editTime()" title="修改当前时间" style="padding:5px 12px;">修改当前时间</span>
                 </div>
             </div>
 
