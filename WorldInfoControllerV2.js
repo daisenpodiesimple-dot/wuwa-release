@@ -3405,6 +3405,7 @@ const OTHER_ENTRIES_CONFIG = {
   },
   // 地区二级排序：按剧情发展顺序，未列出的地区排在后面
   REGION_ORDER: [
+    "🌍 通用世界观",
     "🐉 瑝珑/今州",
     "🌊 黑海岸",
     "🏛️ 黎那汐塔/拉古那",
@@ -3587,28 +3588,29 @@ function _other_renderList() {
 
   // ===== 顶栏渲染到 #wb-global-btns（固定区，不滚动）=====
   var tokenInfo = st.triggeredTokenCount !== null
-    ? "<span style='color:" + C.summaryActive + ";font-size:12px;'>⚡ Token: " + st.triggeredTokenCount + "</span>"
+    ? "<span style='color:" + C.summaryActive + ";font-size:clamp(10px,2vw,12px);white-space:nowrap;'>⚡ " + st.triggeredTokenCount + "</span>"
     : "";
-  var onlyBtn = st.triggeredUids.size > 0
-    ? "<button id='wb-other-toggle-only' style='background:" + (st.showOnlyTriggered ? C.summaryOn : "#4a5568") + ";color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;'>" + (st.showOnlyTriggered ? "👁 只看触发" : "👁 全部") + "</button>"
-    : "";
+  // 检测/只看触发合并成单按钮两态：未触发或已还原="🧪 检测触发"，只看触发="👁 全部"
+  var hasTriggered = st.triggeredUids.size > 0;
+  var inOnlyMode = hasTriggered && st.showOnlyTriggered;
+  var detectLabel = st.isDetecting ? "⏳ 检测中..." : (inOnlyMode ? "👁 全部" : "🧪 检测触发");
   var topbar =
-    "<div style='display:flex;gap:5px;align-items:center;flex-wrap:wrap;'>" +
-    "<input type='text' id='wb-other-search' placeholder='🔍 搜索条目名...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:120px;padding:6px 8px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:12px;'>" +
-    "<button id='wb-other-detect' style='background:" + (st.isDetecting ? "#4a5568" : "#4a5568") + ";color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + (st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发") + "</button>" +
-    "<button id='wb-other-reload' title='重新读取世界书' style='background:#4a5568;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap;'>🔄</button>" +
-    onlyBtn + tokenInfo + "</div>" +
-    "<div style='padding:4px 2px;font-size:11px;color:#718096;'>共 " + data.length + " 条（已排除角色/剧情/梗概/系统/变量/Pro·Lite）</div>";
+    "<div style='display:flex;gap:4px;align-items:center;flex-wrap:nowrap;'>" +
+    "<input type='text' id='wb-other-search' placeholder='🔍 搜索...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:80px;padding:5px 7px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:clamp(10px,2.2vw,12px);'>" +
+    "<button id='wb-other-detect' style='background:" + (inOnlyMode ? C.summaryOn : "#4a5568") + ";color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:clamp(10px,2.2vw,12px);font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + detectLabel + "</button>" +
+    "<button id='wb-other-reload' title='重新读取世界书' style='background:#4a5568;color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:clamp(10px,2.2vw,12px);white-space:nowrap;'>🔄</button>" +
+    tokenInfo + "</div>";
   // 顶栏只创建一次：重建会替换搜索框元素，打断中文输入、丢失 input 绑定
   if (!document.getElementById("wb-other-search")) {
     $("#wb-global-btns").show().html(topbar);
   } else {
     $("#wb-global-btns").show();
-    // 只更新会变的状态：检测按钮文字、只看触发按钮、token 显示
-    $("#wb-other-detect").prop("disabled", st.isDetecting).text(st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发");
-    if (st.triggeredUids.size > 0 && !document.getElementById("wb-other-toggle-only")) {
-      $("#wb-other-detect").after('<button id="wb-other-toggle-only" style="background:' + (st.showOnlyTriggered ? "#ecc94b" : "#4a5568") + ';color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;">' + (st.showOnlyTriggered ? "👁 只看触发" : "👁 全部") + '</button>');
-    }
+    // 只更新检测按钮（合并后单按钮两态：检测触发 / 全部）
+    var _ht = st.triggeredUids.size > 0;
+    var _inOnly = _ht && st.showOnlyTriggered;
+    $("#wb-other-detect").prop("disabled", st.isDetecting)
+      .text(st.isDetecting ? "⏳ 检测中..." : (_inOnly ? "👁 全部" : "🧪 检测触发"))
+      .css("background", _inOnly ? C.summaryOn : "#4a5568");
   }
 
   // ===== 条目树渲染到 #wb-switcher-list（沿用其原生 flex:1;overflow-y:auto，不改样式）=====
@@ -3782,9 +3784,19 @@ function _other_bindEvents() {
     }
   });
 
-  // 检测
+  // 检测/只看触发 合并按钮：
+  //  - 未触发或已还原 → 点击跑检测，完成后自动只看触发
+  //  - 已只看触发 → 点击还原显示全部
   $("#wb-other-detect").off("click").on("click", async function () {
     if (OTHER_ENTRIES_STATE.isDetecting) return;
+    var st = OTHER_ENTRIES_STATE;
+    // 已只看触发：还原全部
+    if (st.triggeredUids.size > 0 && st.showOnlyTriggered) {
+      st.showOnlyTriggered = false;
+      _other_renderList();
+      return;
+    }
+    // 否则跑检测，完成后自动进入只看触发
     await _other_runDetection();
   });
   // 手动刷新：强制重读世界书
@@ -3796,15 +3808,6 @@ function _other_bindEvents() {
     await renderOtherEntriesView(true);
   });
 
-  // 只看触发
-  $("#wb-other-toggle-only").off("click").on("click", function () {
-    OTHER_ENTRIES_STATE.showOnlyTriggered = !OTHER_ENTRIES_STATE.showOnlyTriggered;
-    _other_renderList();
-    if (OTHER_ENTRIES_STATE.showOnlyTriggered) {
-      $(".wb-other-l1-body").show();
-      $(".wb-other-l2-body").css("display", "grid");
-    }
-  });
 }
 
 // 批量开关某个二级分组下的所有条目
@@ -3910,12 +3913,20 @@ async function _other_runDetection() {
     var n = activatedUids.size;
     if (n === 0) toastr.info("本轮无条目被触发。");
     else toastr.success("检测到 " + n + " 个条目被触发" + (st.triggeredTokenCount !== null ? "，预估 Token: " + st.triggeredTokenCount : ""));
-    _other_renderList();
+    // 检测完成：自动进入只看触发模式
+    st.showOnlyTriggered = n > 0;
   } catch (e) {
     console.error("[WuWa OtherEntries] detection failed:", e);
     toastr.error("检测失败：" + e.message);
   } finally {
+    // 必须先清 isDetecting 再渲染，否则按钮卡在"检测中"
     st.isDetecting = false;
+    _other_renderList();
+    // 只看触发模式下展开所有分组让命中项可见
+    if (st.showOnlyTriggered) {
+      $(".wb-other-l1-body").show();
+      $(".wb-other-l2-body").css("display", "grid");
+    }
   }
 }
 
