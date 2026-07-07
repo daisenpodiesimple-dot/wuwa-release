@@ -3613,7 +3613,7 @@ function _other_renderList() {
         "<div class='wb-other-l2' style='margin:3px 0;'>" +
         "<div class='wb-other-l2-head' style='padding:4px 8px;background:#3a4357;color:#cbd5e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-radius:3px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" +
         "<span>" + l2 + " <span style='opacity:0.6;font-size:10px;'>(" + items.length + ")</span></span>" +
-        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
+        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;vertical-align:middle;line-height:1.4;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
         "<span style='opacity:0.8;margin-left:4px;'>▾</span></div>"
       );
       var itemsHtml = [];
@@ -3702,11 +3702,16 @@ function _other_bindEvents() {
   // 二级 智能全开/全关（单个按钮，根据组内状态切换）
   $("#wb-switcher-list").off("click", ".wb-other-l2-toggle").on("click", ".wb-other-l2-toggle", async function (e) {
     e.stopPropagation();
-    var l2name = $(this).attr("data-l2");
-    var items = OTHER_ENTRIES_STATE.classified.filter(function (x) { return x.l2 === l2name; });
-    // 有任意关闭 → 全开；全部已开 → 全关
-    var targetVal = !items.every(function (x) { return x.entry.enabled; });
-    await _other_batchToggle(this, targetVal, l2name);
+    var btn = $(this);
+    // 从 DOM 取该分组下的所有 uid（遍历按钮所在的 .wb-other-l2 容器内的 item），绝不跨组
+    var l2wrap = btn.closest(".wb-other-l2");
+    var uids = [];
+    l2wrap.find(".wb-other-item").each(function () { uids.push(Number($(this).attr("data-uid"))); });
+    if (uids.length === 0) return;
+    // 读当前 enabled 状态判断目标值：有任意关闭 → 全开；全开 → 全关
+    var entries = uids.map(function (u) { return OTHER_ENTRIES_STATE.allEntries.find(function (x) { return x.uid === u; }); }).filter(Boolean);
+    var targetVal = !entries.every(function (x) { return x.enabled; });
+    await _other_batchToggle(btn, targetVal, uids);
   });
 
   // 单条开关
@@ -3761,17 +3766,17 @@ function _other_bindEvents() {
 
 // 批量开关某个二级分组下的所有条目
 // btn = 点击的全开/全关按钮，targetVal = true(全开)/false(全关)
-async function _other_batchToggle(btn, targetVal, l2name) {
-  var items = OTHER_ENTRIES_STATE.classified.filter(function (x) { return x.l2 === l2name; });
-  if (items.length === 0) return;
-  var book = items[0].entry.bookName;
-  var needChange = items.filter(function (x) { return x.entry.enabled !== targetVal; });
+async function _other_batchToggle(btn, targetVal, uids) {
+  if (!uids || uids.length === 0) return;
+  var uidSet = {};
+  for (var i = 0; i < uids.length; i++) uidSet[uids[i]] = true;
+  var items = OTHER_ENTRIES_STATE.allEntries.filter(function (x) { return uidSet[x.uid]; });
+  var needChange = items.filter(function (x) { return x.enabled !== targetVal; });
   if (needChange.length === 0) {
     toastr.info("该分组已经是" + (targetVal ? "全部开启" : "全部关闭") + "状态");
     return;
   }
-  var uidSet = {};
-  for (var i = 0; i < needChange.length; i++) uidSet[needChange[i].entry.uid] = true;
+  var book = items[0].bookName;
   try {
     await updateWorldbookWith(book, function (entries) {
       return entries.map(function (en) {
@@ -3779,16 +3784,14 @@ async function _other_batchToggle(btn, targetVal, l2name) {
         return en;
       });
     }, { render: "immediate" });
-    // 更新本地状态 + 局部刷新视觉
     for (var j = 0; j < needChange.length; j++) {
-      needChange[j].entry.enabled = targetVal;
-      var row = $(".wb-other-item[data-uid='" + needChange[j].entry.uid + "']");
-      if (row.length) _other_updateRowVisual(row, needChange[j].entry);
+      needChange[j].enabled = targetVal;
+      var row = $(".wb-other-item[data-uid='" + needChange[j].uid + "']");
+      if (row.length) _other_updateRowVisual(row, needChange[j]);
     }
-    // 更新按钮自身文字和颜色
-    var newAllOn = items.every(function (x) { return x.entry.enabled; });
+    var newAllOn = items.every(function (x) { return x.enabled; });
     $(btn).text(newAllOn ? "全关" : "全开").css("background", newAllOn ? "#744256" : "#2f8f5b");
-    toastr.success((targetVal ? "已开启 " : "已关闭 ") + needChange.length + " 个条目（" + l2name + "）");
+    toastr.success((targetVal ? "已开启 " : "已关闭 ") + needChange.length + " 个条目");
   } catch (err) {
     toastr.error("批量操作失败: " + err.message);
   }
