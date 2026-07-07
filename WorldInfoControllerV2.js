@@ -3512,9 +3512,22 @@ function _other_classifyEntry(entry) {
   return { l1: "❓ 未分类", l2: "⚠️ 待整理", cleanName };
 }
 
-async function renderOtherEntriesView() {
+async function renderOtherEntriesView(forceReload) {
   var list = document.getElementById("wb-switcher-list");
+  // 有缓存且未强制刷新 → 直接用缓存渲染，不重新读世界书（秒开）
+  var curChatId = (typeof getContext === "function") ? (getContext().chatId || getContext().chat_id || "") : "";
+  var cacheValid = !forceReload && OTHER_ENTRIES_STATE._loaded && OTHER_ENTRIES_STATE._loadedChatId === curChatId && OTHER_ENTRIES_STATE.classified.length > 0;
+  if (cacheValid) {
+    // 缓存有效：刷新一下 enabled 状态（用户可能在别处改了开关），但不重读
+    _other_renderList();
+    return;
+  }
   if (list) list.innerHTML = "<div style='text-align:center;color:#718096;padding:20px;'>📖 正在读取世界书...</div>";
+  await _other_loadAndRender();
+}
+
+async function _other_loadAndRender() {
+  var list = document.getElementById("wb-switcher-list");
   try {
     var bookName = null;
     try {
@@ -3531,6 +3544,9 @@ async function renderOtherEntriesView() {
     OTHER_ENTRIES_STATE.classified = OTHER_ENTRIES_STATE.allEntries
       .map(function (entry) { return Object.assign({ entry: entry }, _other_classifyEntry(entry)); })
       .filter(function (x) { return !x.excluded; });
+    var curChatId = (typeof getContext === "function") ? (getContext().chatId || getContext().chat_id || "") : "";
+    OTHER_ENTRIES_STATE._loaded = true;
+    OTHER_ENTRIES_STATE._loadedChatId = curChatId;
 
     _other_renderList();
   } catch (e) {
@@ -3555,6 +3571,7 @@ function _other_renderList() {
     "<div style='display:flex;gap:5px;align-items:center;flex-wrap:wrap;'>" +
     "<input type='text' id='wb-other-search' placeholder='🔍 搜索条目名...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:120px;padding:6px 8px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:12px;'>" +
     "<button id='wb-other-detect' style='background:" + (st.isDetecting ? "#4a5568" : "#4a5568") + ";color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + (st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发") + "</button>" +
+    "<button id='wb-other-reload' title='重新读取世界书' style='background:#4a5568;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap;'>🔄</button>" +
     onlyBtn + tokenInfo + "</div>" +
     "<div style='padding:4px 2px;font-size:11px;color:#718096;'>共 " + data.length + " 条（已排除角色/剧情/梗概/系统/变量/Pro·Lite）</div>";
   $("#wb-global-btns").show().html(topbar);
@@ -3596,10 +3613,8 @@ function _other_renderList() {
         "<div class='wb-other-l2' style='margin:3px 0;'>" +
         "<div class='wb-other-l2-head' style='padding:4px 8px;background:#3a4357;color:#cbd5e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-radius:3px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" +
         "<span>" + l2 + " <span style='opacity:0.6;font-size:10px;'>(" + items.length + ")</span></span>" +
-        "<span style='display:flex;gap:3px;align-items:center;' onclick='event.stopPropagation()'>" +
-        "<button class='wb-other-l2-allon' style='background:#2f8f5b;color:white;border:none;padding:1px 5px;border-radius:2px;cursor:pointer;font-size:10px;'>全开</button>" +
-        "<button class='wb-other-l2-alloff' style='background:#744256;color:white;border:none;padding:1px 5px;border-radius:2px;cursor:pointer;font-size:10px;'>全关</button>" +
-        "<span style='opacity:0.8;margin-left:2px;'>▾</span></span></div>"
+        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
+        "<span style='opacity:0.8;margin-left:4px;'>▾</span></div>"
       );
       var itemsHtml = [];
       for (var ii = 0; ii < items.length; ii++) itemsHtml.push(_other_renderItem(items[ii], C));
@@ -3637,20 +3652,38 @@ function _other_renderItem(item, C) {
 function _other_bindEvents() {
   // 搜索（200ms 防抖）
   var searchTimer = null;
+  // 搜索：纯 toggle 显示/隐藏现有 DOM，不重建（照抄别的 tab 的做法，避免打断中文输入）
   $("#wb-other-search").on("input", function () {
     clearTimeout(searchTimer);
-    var v = $(this).val();
+    var v = $(this).val().toLowerCase().trim();
     searchTimer = setTimeout(function () {
       OTHER_ENTRIES_STATE._searchKw = v;
-      _other_renderList();
-      if (v && v.trim()) {
+      // 先全部展开（搜索时需要看到命中项）
+      if (v) {
         $(".wb-other-l1-body").show();
         $(".wb-other-l2-body").css("display", "grid");
       }
-      // 恢复搜索框焦点和光标到末尾
-      var sb = document.getElementById("wb-other-search");
-      if (sb) { sb.focus(); var len = sb.value.length; try { sb.setSelectionRange(len, len); } catch (e2) {} }
-    }, 200);
+      // 遍历每个条目行，按 cleanName 匹配 toggle
+      $(".wb-other-item").each(function () {
+        var name = $(this).find("span").first().text().toLowerCase();
+        var full = ($(this).attr("title") || "").toLowerCase();
+        $(this).toggle(!v || name.indexOf(v) >= 0 || full.indexOf(v) >= 0);
+      });
+      // 隐藏没有可见条目的二级分组和一级分组
+      if (v) {
+        $(".wb-other-l2").each(function () {
+          var hasVis = $(this).find(".wb-other-item:visible").length > 0;
+          $(this).toggle(hasVis);
+        });
+        $(".wb-other-l1").each(function () {
+          var hasVis = $(this).find(".wb-other-item:visible").length > 0;
+          $(this).toggle(hasVis);
+        });
+      } else {
+        // 清空搜索时全部恢复显示（但折叠态保持收起）
+        $(".wb-other-l2, .wb-other-l1").show();
+      }
+    }, 150);
   });
 
   // 一级折叠
@@ -3666,14 +3699,14 @@ function _other_bindEvents() {
     else body.css("display", "grid");
   });
 
-  // 二级 全开 / 全关
-  $("#wb-switcher-list").off("click", ".wb-other-l2-allon").on("click", ".wb-other-l2-allon", async function (e) {
+  // 二级 智能全开/全关（单个按钮，根据组内状态切换）
+  $("#wb-switcher-list").off("click", ".wb-other-l2-toggle").on("click", ".wb-other-l2-toggle", async function (e) {
     e.stopPropagation();
-    await _other_batchToggle(this, true);
-  });
-  $("#wb-switcher-list").off("click", ".wb-other-l2-alloff").on("click", ".wb-other-l2-alloff", async function (e) {
-    e.stopPropagation();
-    await _other_batchToggle(this, false);
+    var l2name = $(this).attr("data-l2");
+    var items = OTHER_ENTRIES_STATE.classified.filter(function (x) { return x.l2 === l2name; });
+    // 有任意关闭 → 全开；全部已开 → 全关
+    var targetVal = !items.every(function (x) { return x.entry.enabled; });
+    await _other_batchToggle(this, targetVal, l2name);
   });
 
   // 单条开关
@@ -3695,6 +3728,7 @@ function _other_bindEvents() {
       }, { render: "immediate" });
       entry.enabled = newVal;
       _other_updateRowVisual(row, entry);
+      toastr.success((newVal ? "已开启" : "已关闭") + "：" + entry.name.replace(/^[^\u4e00-\u9fff]+/, ""));
     } catch (err) {
       toastr.error("切换失败: " + err.message);
     }
@@ -3704,6 +3738,14 @@ function _other_bindEvents() {
   $("#wb-other-detect").off("click").on("click", async function () {
     if (OTHER_ENTRIES_STATE.isDetecting) return;
     await _other_runDetection();
+  });
+  // 手动刷新：强制重读世界书
+  $("#wb-other-reload").off("click").on("click", async function () {
+    OTHER_ENTRIES_STATE._loaded = false;
+    OTHER_ENTRIES_STATE.triggeredUids = new Set();
+    OTHER_ENTRIES_STATE.triggeredTokenCount = null;
+    OTHER_ENTRIES_STATE.showOnlyTriggered = false;
+    await renderOtherEntriesView(true);
   });
 
   // 只看触发
@@ -3719,18 +3761,17 @@ function _other_bindEvents() {
 
 // 批量开关某个二级分组下的所有条目
 // btn = 点击的全开/全关按钮，targetVal = true(全开)/false(全关)
-async function _other_batchToggle(btn, targetVal) {
-  var head = $(btn).closest(".wb-other-l2-head");
-  var l2name = head.attr("data-l2");
-  var book = head.attr("data-book");
-  if (!book) return;
-  // 找到该二级下的所有条目 uid
+async function _other_batchToggle(btn, targetVal, l2name) {
   var items = OTHER_ENTRIES_STATE.classified.filter(function (x) { return x.l2 === l2name; });
+  if (items.length === 0) return;
+  var book = items[0].entry.bookName;
   var needChange = items.filter(function (x) { return x.entry.enabled !== targetVal; });
-  if (needChange.length === 0) return;
-  var uids = needChange.map(function (x) { return x.entry.uid; });
+  if (needChange.length === 0) {
+    toastr.info("该分组已经是" + (targetVal ? "全部开启" : "全部关闭") + "状态");
+    return;
+  }
   var uidSet = {};
-  for (var i = 0; i < uids.length; i++) uidSet[uids[i]] = true;
+  for (var i = 0; i < needChange.length; i++) uidSet[needChange[i].entry.uid] = true;
   try {
     await updateWorldbookWith(book, function (entries) {
       return entries.map(function (en) {
@@ -3744,7 +3785,10 @@ async function _other_batchToggle(btn, targetVal) {
       var row = $(".wb-other-item[data-uid='" + needChange[j].entry.uid + "']");
       if (row.length) _other_updateRowVisual(row, needChange[j].entry);
     }
-    toastr.success((targetVal ? "已全部开启" : "已全部关闭") + " " + needChange.length + " 个条目");
+    // 更新按钮自身文字和颜色
+    var newAllOn = items.every(function (x) { return x.entry.enabled; });
+    $(btn).text(newAllOn ? "全关" : "全开").css("background", newAllOn ? "#744256" : "#2f8f5b");
+    toastr.success((targetVal ? "已开启 " : "已关闭 ") + needChange.length + " 个条目（" + l2name + "）");
   } catch (err) {
     toastr.error("批量操作失败: " + err.message);
   }
