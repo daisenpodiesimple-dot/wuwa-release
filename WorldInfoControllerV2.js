@@ -2734,6 +2734,7 @@ async function switchTab(view) {
   } else {
     $("#wb-global-btns").show();
     $("#wb-switcher-search").show();
+    $("#wb-switcher-list").css("display", "");
     if (view === "chars") {
       $("#wb-virgin-btns").show();
       renderGlobalButtonsChars();
@@ -3597,7 +3598,7 @@ function _other_renderList() {
       innerParts.push("<div class='wb-other-l2-body' style='display:none;padding:4px 2px;grid-template-columns:1fr 1fr;gap:3px 8px;'>" + itemsHtml.join("") + "</div></div>");
     }
     parts.push(
-      "<div class='wb-other-l1' style='margin:6px 0;border:1px solid " + C.border + ";border-radius:6px;overflow:hidden;'>" +
+      "<div class='wb-other-l1' style='margin:6px 0;border:1px solid " + C.border + ";border-radius:6px;overflow:hidden;flex-shrink:0;'>" +
       "<div class='wb-other-l1-head' style='padding:8px 10px;background:" + C.storyOn + ";color:white;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:13px;'>" +
       "<span>" + l1 + "</span><span style='font-size:11px;opacity:0.9;'>" + visInL1.length + " 项 ▾</span></div>" +
       "<div class='wb-other-l1-body' style='display:none;padding:4px 6px;'>" + innerParts.join("") + "</div></div>"
@@ -3605,7 +3606,7 @@ function _other_renderList() {
   }
   if (!hasAny) parts.push("<div style='text-align:center;color:#718096;padding:30px;'>" + (kw ? "未匹配到条目" : "没有可显示的条目") + "</div>");
 
-  $("#wb-switcher-list").html(parts.join(""));
+  $("#wb-switcher-list").css("display", "block").html(parts.join(""));
   _other_bindEvents();
 }
 
