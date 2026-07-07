@@ -1,4 +1,7 @@
 /**
+});
+  if (!document.getElementById("wb-other-style")) { var _st = document.createElement("style"); _st.id = "wb-other-style"; _st.textContent = ".wb-search-hide{display:none !important;}"; document.head.appendChild(_st); }
+/**
  * @name WuWa 世界书控制 (变量驱动+梗概版)
  * @description v4.0.3 集成角色Pro/Lite、剧情(✍️)、梗概(🎬️)控制。优化了过渡期扫描和悬浮窗显示。
  * @version 4.0.3
@@ -3574,7 +3577,17 @@ function _other_renderList() {
     "<button id='wb-other-reload' title='重新读取世界书' style='background:#4a5568;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap;'>🔄</button>" +
     onlyBtn + tokenInfo + "</div>" +
     "<div style='padding:4px 2px;font-size:11px;color:#718096;'>共 " + data.length + " 条（已排除角色/剧情/梗概/系统/变量/Pro·Lite）</div>";
-  $("#wb-global-btns").show().html(topbar);
+  // 顶栏只创建一次：重建会替换搜索框元素，打断中文输入、丢失 input 绑定
+  if (!document.getElementById("wb-other-search")) {
+    $("#wb-global-btns").show().html(topbar);
+  } else {
+    $("#wb-global-btns").show();
+    // 只更新会变的状态：检测按钮文字、只看触发按钮、token 显示
+    $("#wb-other-detect").prop("disabled", st.isDetecting).text(st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发");
+    if (st.triggeredUids.size > 0 && !document.getElementById("wb-other-toggle-only")) {
+      $("#wb-other-detect").after('<button id="wb-other-toggle-only" style="background:' + (st.showOnlyTriggered ? "#ecc94b" : "#4a5568") + ';color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;">' + (st.showOnlyTriggered ? "👁 只看触发" : "👁 全部") + '</button>');
+    }
+  }
 
   // ===== 条目树渲染到 #wb-switcher-list（沿用其原生 flex:1;overflow-y:auto，不改样式）=====
   var l1Order = ["📚 设定", "🗺️ 地区", "👥 组织", "📍 地点", "👤 NPC", "👹 残象", "🐱 伙伴", "🍔 食物", "📅 历史", "✨ 杂项", "❓ 未分类"];
@@ -3613,7 +3626,7 @@ function _other_renderList() {
         "<div class='wb-other-l2' style='margin:3px 0;'>" +
         "<div class='wb-other-l2-head' style='padding:4px 8px;background:#3a4357;color:#cbd5e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-radius:3px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" +
         "<span>" + l2 + " <span style='opacity:0.6;font-size:10px;'>(" + items.length + ")</span></span>" +
-        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;vertical-align:middle;line-height:1.4;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
+        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;margin-left:auto;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
         "<span style='opacity:0.8;margin-left:4px;'>▾</span></div>"
       );
       var itemsHtml = [];
@@ -3641,7 +3654,8 @@ function _other_renderItem(item, C) {
   var border = trig ? "1px solid " + C.storyActive : "1px solid transparent";
   var dotColor = on ? (trig ? C.storyActive : C.pro) : C.inactive;
   var title = (e.name || "").replace(/"/g, "&quot;");
-  return "<div class='wb-other-item' data-uid='" + e.uid + "' data-book='" + e.bookName + "' " +
+  var _sn = (item.cleanName + ' ' + (e.name || '')).toLowerCase();
+  return "<div class='wb-other-item' data-uid='" + e.uid + "' data-book='" + e.bookName + "' data-name='" + _sn.replace(/'/g, '&#39;') + "' " +
     "style='display:flex;align-items:center;justify-content:space-between;padding:3px 6px;background:" + bg + ";border:" + border + ";border-radius:3px;cursor:pointer;font-size:12px;' " +
     "title='" + title + "'>" +
     "<span style='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:" + (on ? "#e2e8f0" : "#718096") + ";'>" + (trig ? "⚡ " : "") + item.cleanName + "</span>" +
@@ -3650,42 +3664,35 @@ function _other_renderItem(item, C) {
 }
 
 function _other_bindEvents() {
-  // 搜索（200ms 防抖）
-  var searchTimer = null;
-  // 搜索：纯 toggle 显示/隐藏现有 DOM，不重建（照抄别的 tab 的做法，避免打断中文输入）
-  $("#wb-other-search").on("input", function () {
-    clearTimeout(searchTimer);
+  // 搜索：纯 toggle 显隐现有 DOM，不重渲染、不防抖、不动焦点（照抄 wb-switcher-search 的范式）
+  $("#wb-global-btns").off("input", "#wb-other-search").on("input", "#wb-other-search", function () {
     var v = $(this).val().toLowerCase().trim();
-    searchTimer = setTimeout(function () {
-      OTHER_ENTRIES_STATE._searchKw = v;
-      // 先全部展开（搜索时需要看到命中项）
-      if (v) {
-        $(".wb-other-l1-body").show();
-        $(".wb-other-l2-body").css("display", "grid");
-      }
-      // 遍历每个条目行，按 cleanName 匹配 toggle
-      $(".wb-other-item").each(function () {
-        var name = $(this).find("span").first().text().toLowerCase();
-        var full = ($(this).attr("title") || "").toLowerCase();
-        $(this).toggle(!v || name.indexOf(v) >= 0 || full.indexOf(v) >= 0);
+    // 逐条目 toggle
+    $(".wb-other-item").each(function () {
+      var name = ($(this).data("name") || "").toString();
+      var hit = !v || name.indexOf(v) >= 0;
+      this.style.display = hit ? "" : "none";
+    });
+    // 有搜索词时展开所有分组让命中项可见；无词时恢复各分组原始折叠态（交给用户手动展开）
+    if (v) {
+      $(".wb-other-l1-body").show();
+      $(".wb-other-l2-body").css("display", "grid");
+      // 隐藏空二级、空一级
+      $(".wb-other-l2").each(function () {
+        var has = $(this).find(".wb-other-item").filter(function(){return this.style.display !== "none";}).length > 0;
+        this.style.display = has ? "" : "none";
       });
-      // 隐藏没有可见条目的二级分组和一级分组
-      if (v) {
-        $(".wb-other-l2").each(function () {
-          var hasVis = $(this).find(".wb-other-item:visible").length > 0;
-          $(this).toggle(hasVis);
-        });
-        $(".wb-other-l1").each(function () {
-          var hasVis = $(this).find(".wb-other-item:visible").length > 0;
-          $(this).toggle(hasVis);
-        });
-      } else {
-        // 清空搜索时全部恢复显示（但折叠态保持收起）
-        $(".wb-other-l2, .wb-other-l1").show();
-      }
-    }, 150);
+      $(".wb-other-l1").each(function () {
+        var has = $(this).find(".wb-other-item").filter(function(){return this.style.display !== "none";}).length > 0;
+        this.style.display = has ? "" : "none";
+      });
+    } else {
+      // 清空搜索：所有条目恢复显示，分组回到默认收起
+      $(".wb-other-item").css("display", "");
+      $(".wb-other-l2, .wb-other-l1").css("display", "");
+      $(".wb-other-l1-body, .wb-other-l2-body").hide();
+    }
   });
-
   // 一级折叠
   $("#wb-switcher-list").off("click", ".wb-other-l1-head").on("click", ".wb-other-l1-head", function () {
     $(this).siblings(".wb-other-l1-body").toggle();
