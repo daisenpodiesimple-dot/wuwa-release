@@ -2451,10 +2451,10 @@ function createSwitcherPanel() {
         </div>
       </div>
       <div style='display:flex;border-bottom:1px solid ${SWITCHER_CONFIG.colors.border};'>
-        <button id='wb-tab-chars' style='flex:1;padding:10px;background:${SWITCHER_CONFIG.colors.tabActive};color:white;border:none;cursor:pointer;font-weight:bold;'>👥 角色</button>
-        <button id='wb-tab-stories' style='flex:1;padding:10px;background:${SWITCHER_CONFIG.colors.tabInactive};color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>✍️ 剧情</button>
-        <button id='wb-tab-summaries' style='flex:1;padding:10px;background:${SWITCHER_CONFIG.colors.tabInactive};color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>🎬 梗概</button>
-        <button id='wb-tab-others' style='flex:1;padding:10px;background:transparent;color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>📖 条目</button>
+        <button id='wb-tab-chars' style='flex:1;padding:10px;white-space:nowrap;font-size:clamp(11px,2.8vw,14px);background:${SWITCHER_CONFIG.colors.tabActive};color:white;border:none;cursor:pointer;font-weight:bold;'>👥 角色</button>
+        <button id='wb-tab-stories' style='flex:1;padding:10px;white-space:nowrap;font-size:clamp(11px,2.8vw,14px);background:${SWITCHER_CONFIG.colors.tabInactive};color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>✍️ 剧情</button>
+        <button id='wb-tab-summaries' style='flex:1;padding:10px;white-space:nowrap;font-size:clamp(11px,2.8vw,14px);background:${SWITCHER_CONFIG.colors.tabInactive};color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>🎬 梗概</button>
+        <button id='wb-tab-others' style='flex:1;padding:10px;white-space:nowrap;font-size:clamp(11px,2.8vw,14px);background:transparent;color:#a0aec0;border:none;cursor:pointer;font-weight:bold;'>📖 条目</button>
       </div>
       <div style='padding:10px 15px;background:rgba(0,0,0,0.2);display:flex;flex-direction:column;gap:10px;'>
         <div style='display:flex;gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;'>
@@ -3387,9 +3387,10 @@ const OTHER_ENTRIES_CONFIG = {
     "📐": "日程",
   },
   REGION_MAP: {
-    "🏛️": "黎那汐塔",
+    "🏛️": "黎那汐塔/拉古那",
     "🏫": "拉海洛",
-    "🐉": "瑝珑",
+    "🐉": "瑝珑/今州",
+    "🦊": "梦洲",
     "🌊": "黑海岸",
     "⚔️": "七丘",
     "🗽": "新联邦",
@@ -3402,6 +3403,15 @@ const OTHER_ENTRIES_CONFIG = {
     "🎇": "无尽宴会",
     "👹": "残象",
   },
+  // 地区二级排序：按剧情发展顺序，未列出的地区排在后面
+  REGION_ORDER: [
+    "🐉 瑝珑/今州",
+    "🌊 黑海岸",
+    "🏛️ 黎那汐塔/拉古那",
+    "⚔️ 七丘",
+    "🏫 拉海洛",
+    "❄️ 罗伊冰原"
+  ],
   EXCLUDE_CP: {
     0x2640: "角色",
     0x2642: "角色",
@@ -3423,6 +3433,18 @@ const OTHER_ENTRIES_STATE = {
 
 // 取字符串首个码点
 function _other_firstCP(s) { return s ? s.codePointAt(0) : -1; }
+// 把 token 转成彩色 emoji 显示：保留原始 ZWJ 序列/肤色/性别，首码点若无 VS16 则补 \uFE0F
+// （许多条目源文本里写的是文字版如 ⚔❄🏛，浏览器渲染成黑白，补 VS16 后变彩色）
+function _other_emojiDisplay(tok) {
+  if (!tok) return tok;
+  // 已含 VS16 或 ZWJ，原样返回
+  if (tok.indexOf("\u200D") >= 0 || tok.indexOf("\uFE0F") >= 0) return tok;
+  // 所有 emoji 首码点都补 VS16（强制彩色呈现，覆盖辅助平面如 🏫🗺📍👤🛍）
+  var cp = tok.codePointAt(0);
+  var head = String.fromCodePoint(cp);
+  var rest = tok.slice(cp > 0xffff ? 2 : 1);
+  return head + "\uFE0F" + rest;
+}
 
 // 按首码点查表
 function _other_cpLookup(map, tok) {
@@ -3496,7 +3518,7 @@ function _other_classifyEntry(entry) {
   // 杂项
   if (_other_cpLookup(OTHER_ENTRIES_CONFIG.MISC, e1)) {
     l1 = "✨ 杂项";
-    l2 = String.fromCodePoint(e1.codePointAt(0)) + " " + _other_cpLookup(OTHER_ENTRIES_CONFIG.MISC, e1);
+    l2 = _other_emojiDisplay(e1) + " " + _other_cpLookup(OTHER_ENTRIES_CONFIG.MISC, e1);
     return { l1, l2, cleanName };
   }
   // 独立一级
@@ -3505,7 +3527,7 @@ function _other_classifyEntry(entry) {
     for (let k = 1; k < toks.length; k++) {
       if (toks[k].codePointAt(0) === 0x2640 || toks[k].codePointAt(0) === 0x2642) continue;
       if (_other_cpLookup(OTHER_ENTRIES_CONFIG.REGION_MAP, toks[k])) {
-        l2 = String.fromCodePoint(toks[k].codePointAt(0)) + " " + _other_cpLookup(OTHER_ENTRIES_CONFIG.REGION_MAP, toks[k]);
+        l2 = _other_emojiDisplay(toks[k]) + " " + _other_cpLookup(OTHER_ENTRIES_CONFIG.REGION_MAP, toks[k]);
         break;
       }
     }
@@ -3590,7 +3612,7 @@ function _other_renderList() {
   }
 
   // ===== 条目树渲染到 #wb-switcher-list（沿用其原生 flex:1;overflow-y:auto，不改样式）=====
-  var l1Order = ["📚 设定", "🗺️ 地区", "👥 组织", "📍 地点", "👤 NPC", "👹 残象", "🐱 伙伴", "🍔 食物", "📅 历史", "✨ 杂项", "❓ 未分类"];
+  var l1Order = ["🗺️ 地区", "📍 地点", "📚 设定", "👥 组织", "👤 NPC", "👹 残象", "🐱 伙伴", "🍔 食物", "📅 历史", "✨ 杂项", "❓ 未分类"];
   var byL1 = {};
   for (var i = 0; i < data.length; i++) {
     var x = data[i];
@@ -3611,7 +3633,21 @@ function _other_renderList() {
     var l1 = l1Order[li];
     var l2map = byL1[l1];
     if (!l2map) continue;
-    var l2keys = Object.keys(l2map).sort();
+    var _ro = (OTHER_ENTRIES_CONFIG.REGION_ORDER || []).map(function(s) {
+      var idx = s.indexOf(" ");
+      return idx >= 0 ? s.slice(idx + 1) : s;
+    });
+    function _l2name(key) {
+      var idx = key.indexOf(" ");
+      return idx >= 0 ? key.slice(idx + 1) : key;
+    }
+    var l2keys = Object.keys(l2map).sort(function(a, b) {
+      var ia = _ro.indexOf(_l2name(a)), ib = _ro.indexOf(_l2name(b));
+      if (ia < 0) ia = 9999;
+      if (ib < 0) ib = 9999;
+      if (ia !== ib) return ia - ib;
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
     var visInL1 = [];
     for (var lk = 0; lk < l2keys.length; lk++) visInL1 = visInL1.concat(l2map[l2keys[lk]]);
     visInL1 = visInL1.filter(vis);
