@@ -3590,8 +3590,12 @@ function _other_renderList() {
       if (items.length === 0) continue;
       innerParts.push(
         "<div class='wb-other-l2' style='margin:3px 0;'>" +
-        "<div class='wb-other-l2-head' style='padding:4px 8px;background:" + C.lite + ";color:white;cursor:pointer;display:flex;justify-content:space-between;font-size:12px;border-radius:3px;'>" +
-        "<span>" + l2 + "</span><span style='opacity:0.8;'>" + items.length + " ▾</span></div>"
+        "<div class='wb-other-l2-head' style='padding:4px 8px;background:#3a4357;color:#cbd5e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-radius:3px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" +
+        "<span>" + l2 + " <span style='opacity:0.6;font-size:10px;'>(" + items.length + ")</span></span>" +
+        "<span style='display:flex;gap:3px;align-items:center;' onclick='event.stopPropagation()'>" +
+        "<button class='wb-other-l2-allon' style='background:#2f8f5b;color:white;border:none;padding:1px 5px;border-radius:2px;cursor:pointer;font-size:10px;'>全开</button>" +
+        "<button class='wb-other-l2-alloff' style='background:#744256;color:white;border:none;padding:1px 5px;border-radius:2px;cursor:pointer;font-size:10px;'>全关</button>" +
+        "<span style='opacity:0.8;margin-left:2px;'>▾</span></span></div>"
       );
       var itemsHtml = [];
       for (var ii = 0; ii < items.length; ii++) itemsHtml.push(_other_renderItem(items[ii], C));
@@ -3639,6 +3643,9 @@ function _other_bindEvents() {
         $(".wb-other-l1-body").show();
         $(".wb-other-l2-body").css("display", "grid");
       }
+      // 恢复搜索框焦点和光标到末尾
+      var sb = document.getElementById("wb-other-search");
+      if (sb) { sb.focus(); var len = sb.value.length; try { sb.setSelectionRange(len, len); } catch (e2) {} }
     }, 200);
   });
 
@@ -3647,10 +3654,22 @@ function _other_bindEvents() {
     $(this).siblings(".wb-other-l1-body").toggle();
   });
   // 二级折叠（展开切 grid 双列）
-  $("#wb-switcher-list").off("click", ".wb-other-l2-head").on("click", ".wb-other-l2-head", function () {
+  $("#wb-switcher-list").off("click", ".wb-other-l2-head").on("click", ".wb-other-l2-head", function (e) {
+    // 点 全开/全关 按钮时不触发展开折叠
+    if ($(e.target).is("button")) return;
     var body = $(this).siblings(".wb-other-l2-body");
     if (body.is(":visible")) body.hide();
     else body.css("display", "grid");
+  });
+
+  // 二级 全开 / 全关
+  $("#wb-switcher-list").off("click", ".wb-other-l2-allon").on("click", ".wb-other-l2-allon", async function (e) {
+    e.stopPropagation();
+    await _other_batchToggle(this, true);
+  });
+  $("#wb-switcher-list").off("click", ".wb-other-l2-alloff").on("click", ".wb-other-l2-alloff", async function (e) {
+    e.stopPropagation();
+    await _other_batchToggle(this, false);
   });
 
   // 单条开关
@@ -3692,6 +3711,39 @@ function _other_bindEvents() {
       $(".wb-other-l2-body").css("display", "grid");
     }
   });
+}
+
+// 批量开关某个二级分组下的所有条目
+// btn = 点击的全开/全关按钮，targetVal = true(全开)/false(全关)
+async function _other_batchToggle(btn, targetVal) {
+  var head = $(btn).closest(".wb-other-l2-head");
+  var l2name = head.attr("data-l2");
+  var book = head.attr("data-book");
+  if (!book) return;
+  // 找到该二级下的所有条目 uid
+  var items = OTHER_ENTRIES_STATE.classified.filter(function (x) { return x.l2 === l2name; });
+  var needChange = items.filter(function (x) { return x.entry.enabled !== targetVal; });
+  if (needChange.length === 0) return;
+  var uids = needChange.map(function (x) { return x.entry.uid; });
+  var uidSet = {};
+  for (var i = 0; i < uids.length; i++) uidSet[uids[i]] = true;
+  try {
+    await updateWorldbookWith(book, function (entries) {
+      return entries.map(function (en) {
+        if (uidSet[en.uid]) return Object.assign({}, en, { enabled: targetVal });
+        return en;
+      });
+    }, { render: "immediate" });
+    // 更新本地状态 + 局部刷新视觉
+    for (var j = 0; j < needChange.length; j++) {
+      needChange[j].entry.enabled = targetVal;
+      var row = $(".wb-other-item[data-uid='" + needChange[j].entry.uid + "']");
+      if (row.length) _other_updateRowVisual(row, needChange[j].entry);
+    }
+    toastr.success((targetVal ? "已全部开启" : "已全部关闭") + " " + needChange.length + " 个条目");
+  } catch (err) {
+    toastr.error("批量操作失败: " + err.message);
+  }
 }
 
 function _other_updateRowVisual(row, entry) {
