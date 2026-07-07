@@ -2708,6 +2708,7 @@ async function loadDataAndRender() {
     );
 }
 function refreshUIIfOpen() {
+  if (currentView === "others") return;
   if ($("#wb-switcher-panel").is(":visible")) loadDataAndRender();
 }
 
@@ -3481,6 +3482,9 @@ function _other_classifyEntry(entry) {
   if (/^0_|^\d+_📌|^\[/.test(name)) return { excluded: "系统/变量", cleanName };
   if (/\[默认\]|\[精简\]/.test(name)) return { excluded: "精简/默认变量", cleanName };
   if (/\[Pro\]|\[Lite\]/i.test(name)) return { excluded: "Pro/Lite", cleanName };
+  var curMode = (typeof SWITCHER_STATE !== "undefined" && SWITCHER_STATE.simpTradMode) || "simp";
+  if (curMode === "simp" && /\(繁\)|\(簡\)/.test(name)) return { excluded: "繁体条目", cleanName };
+  if (curMode === "trad" && /\(简\)/.test(name)) return { excluded: "简体条目", cleanName };
   const e1 = toks[0];
   // 排除：按首码点（兼容 VS16 有无）
   const ex = OTHER_ENTRIES_CONFIG.EXCLUDE_CP[_other_firstCP(e1)];
@@ -3550,7 +3554,7 @@ function _other_renderList() {
   var topbar =
     "<div style='display:flex;gap:5px;align-items:center;flex-wrap:wrap;'>" +
     "<input type='text' id='wb-other-search' placeholder='🔍 搜索条目名...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:120px;padding:6px 8px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:12px;'>" +
-    "<button id='wb-other-detect' style='background:" + (st.isDetecting ? "#4a5568" : C.storyOn) + ";color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + (st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发") + "</button>" +
+    "<button id='wb-other-detect' style='background:" + (st.isDetecting ? "#4a5568" : "#4a5568") + ";color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + (st.isDetecting ? "⏳ 检测中..." : "🧪 检测触发") + "</button>" +
     onlyBtn + tokenInfo + "</div>" +
     "<div style='padding:4px 2px;font-size:11px;color:#718096;'>共 " + data.length + " 条（已排除角色/剧情/梗概/系统/变量/Pro·Lite）</div>";
   $("#wb-global-btns").show().html(topbar);
@@ -3603,7 +3607,7 @@ function _other_renderList() {
     }
     parts.push(
       "<div class='wb-other-l1' style='margin:6px 0;border:1px solid " + C.border + ";border-radius:6px;overflow:hidden;flex-shrink:0;'>" +
-      "<div class='wb-other-l1-head' style='padding:8px 10px;background:" + C.storyOn + ";color:white;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:13px;'>" +
+      "<div class='wb-other-l1-head' style='padding:8px 10px;background:#2d3748;color:#e2e8f0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:13px;'>" +
       "<span>" + l1 + "</span><span style='font-size:11px;opacity:0.9;'>" + visInL1.length + " 项 ▾</span></div>" +
       "<div class='wb-other-l1-body' style='display:none;padding:4px 6px;'>" + innerParts.join("") + "</div></div>"
     );
