@@ -3587,30 +3587,36 @@ function _other_renderList() {
   var C = SWITCHER_CONFIG.colors;
 
   // ===== 顶栏渲染到 #wb-global-btns（固定区，不滚动）=====
-  var tokenInfo = st.triggeredTokenCount !== null
-    ? "<span style='color:" + C.summaryActive + ";font-size:clamp(10px,2vw,12px);white-space:nowrap;'>⚡ " + st.triggeredTokenCount + "</span>"
-    : "";
-  // 检测/只看触发合并成单按钮两态：未触发或已还原="🧪 检测触发"，只看触发="👁 全部"
+  // 先算模式，再决定 tokenInfo 是否显示
   var hasTriggered = st.triggeredUids.size > 0;
   var inOnlyMode = hasTriggered && st.showOnlyTriggered;
-  var detectLabel = st.isDetecting ? "⏳ 检测中..." : (inOnlyMode ? "👁 全部" : "🧪 检测触发");
+  // 只在只看触发模式（检测完成）时显示 token 数
+  var tokenInfo = (inOnlyMode && st.triggeredTokenCount !== null)
+    ? "<span style='color:" + C.summaryActive + ";font-size:clamp(10px,2vw,12px);white-space:nowrap;max-width:35%;overflow:hidden;text-overflow:ellipsis;'>⚡ " + st.triggeredTokenCount + "</span>"
+    : "";
+  // 合并按钮：未触发/已还原="🧪 检测触发"，只看触发="❌ 取消检测"
+  var detectLabel = st.isDetecting ? "⏳ 检测中..." : (inOnlyMode ? "❌ 取消检测" : "🧪 检测触发");
   var topbar =
-    "<div style='display:flex;gap:4px;align-items:center;flex-wrap:nowrap;'>" +
-    "<input type='text' id='wb-other-search' placeholder='🔍 搜索...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:80px;padding:5px 7px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:clamp(10px,2.2vw,12px);'>" +
+    "<div style='display:flex;gap:4px;align-items:center;flex-wrap:nowrap;overflow:hidden;'>" +
+    "<input type='text' id='wb-other-search' placeholder='🔍 搜索...' value='" + (st._searchKw || "").replace(/'/g, "&#39;") + "' style='flex:1;min-width:50px;padding:5px 7px;border-radius:4px;border:1px solid " + C.border + ";background:#2d3748;color:white;font-size:clamp(10px,2.2vw,12px);'>" +
     "<button id='wb-other-detect' style='background:" + (inOnlyMode ? C.summaryOn : "#4a5568") + ";color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:clamp(10px,2.2vw,12px);font-weight:bold;white-space:nowrap;' " + (st.isDetecting ? "disabled" : "") + ">" + detectLabel + "</button>" +
     "<button id='wb-other-reload' title='重新读取世界书' style='background:#4a5568;color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:clamp(10px,2.2vw,12px);white-space:nowrap;'>🔄</button>" +
+    "<button id='wb-other-allon' title='开启当前检测到但被关闭的条目' style='background:#2f8f5b;color:white;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:clamp(10px,2.2vw,12px);white-space:nowrap;'>✅ 全开</button>" +
     tokenInfo + "</div>";
   // 顶栏只创建一次：重建会替换搜索框元素，打断中文输入、丢失 input 绑定
   if (!document.getElementById("wb-other-search")) {
     $("#wb-global-btns").show().html(topbar);
   } else {
     $("#wb-global-btns").show();
-    // 只更新检测按钮（合并后单按钮两态：检测触发 / 全部）
+    // 只更新检测按钮（检测触发 / 取消检测）
     var _ht = st.triggeredUids.size > 0;
     var _inOnly = _ht && st.showOnlyTriggered;
     $("#wb-other-detect").prop("disabled", st.isDetecting)
-      .text(st.isDetecting ? "⏳ 检测中..." : (_inOnly ? "👁 全部" : "🧪 检测触发"))
+      .text(st.isDetecting ? "⏳ 检测中..." : (_inOnly ? "❌ 取消检测" : "🧪 检测触发"))
       .css("background", _inOnly ? C.summaryOn : "#4a5568");
+    // 只在只看触发模式显示 token
+    if (_inOnly) { $("#wb-global-btns").find("span").filter(function(){return $(this).text().indexOf("⚡")===0;}).show(); }
+    else { $("#wb-global-btns").find("span").filter(function(){return $(this).text().indexOf("⚡")===0;}).hide(); }
   }
 
   // ===== 条目树渲染到 #wb-switcher-list（沿用其原生 flex:1;overflow-y:auto，不改样式）=====
@@ -3664,7 +3670,8 @@ function _other_renderList() {
         "<div class='wb-other-l2' style='margin:3px 0;'>" +
         "<div class='wb-other-l2-head' style='padding:4px 8px;background:#3a4357;color:#cbd5e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;border-radius:3px;' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" +
         "<span>" + l2 + " <span style='opacity:0.6;font-size:10px;'>(" + items.length + ")</span></span>" +
-        "<button class='wb-other-l2-toggle' style='background:" + (items.every(function(x){return x.entry.enabled;}) ? "#744256" : "#2f8f5b") + ";color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;margin-left:auto;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>" + (items.every(function(x){return x.entry.enabled;}) ? "全关" : "全开") + "</button>" +
+        "<button class='wb-other-l2-allon' style='background:#2f8f5b;color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;margin-left:auto;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>全开</button>" +
+        "<button class='wb-other-l2-alloff' style='background:#744256;color:white;border:none;padding:1px 6px;border-radius:2px;cursor:pointer;font-size:10px;margin-left:2px;' data-l1='" + l1 + "' data-l2='" + l2 + "' data-book='" + items[0].entry.bookName + "'>全关</button>" +
         "<span style='opacity:0.8;margin-left:4px;'>▾</span></div>"
       );
       var itemsHtml = [];
@@ -3745,18 +3752,24 @@ function _other_bindEvents() {
   });
 
   // 二级 智能全开/全关（单个按钮，根据组内状态切换）
-  $("#wb-switcher-list").off("click", ".wb-other-l2-toggle").on("click", ".wb-other-l2-toggle", async function (e) {
+  // 二级分组 全开 / 全关 两个独立按钮（固定行为，不切换文字）
+  $("#wb-switcher-list").off("click", ".wb-other-l2-allon").on("click", ".wb-other-l2-allon", async function (e) {
     e.stopPropagation();
     var btn = $(this);
-    // 从 DOM 取该分组下的所有 uid（遍历按钮所在的 .wb-other-l2 容器内的 item），绝不跨组
     var l2wrap = btn.closest(".wb-other-l2");
     var uids = [];
     l2wrap.find(".wb-other-item").each(function () { uids.push(Number($(this).attr("data-uid"))); });
     if (uids.length === 0) return;
-    // 读当前 enabled 状态判断目标值：有任意关闭 → 全开；全开 → 全关
-    var entries = uids.map(function (u) { return OTHER_ENTRIES_STATE.allEntries.find(function (x) { return x.uid === u; }); }).filter(Boolean);
-    var targetVal = !entries.every(function (x) { return x.enabled; });
-    await _other_batchToggle(btn, targetVal, uids);
+    await _other_batchToggle(btn, true, uids);
+  });
+  $("#wb-switcher-list").off("click", ".wb-other-l2-alloff").on("click", ".wb-other-l2-alloff", async function (e) {
+    e.stopPropagation();
+    var btn = $(this);
+    var l2wrap = btn.closest(".wb-other-l2");
+    var uids = [];
+    l2wrap.find(".wb-other-item").each(function () { uids.push(Number($(this).attr("data-uid"))); });
+    if (uids.length === 0) return;
+    await _other_batchToggle(btn, false, uids);
   });
 
   // 单条开关
@@ -3769,19 +3782,22 @@ function _other_bindEvents() {
     var entry = OTHER_ENTRIES_STATE.allEntries.find(function (x) { return x.uid === uid; });
     if (!entry) return;
     var newVal = !entry.enabled;
-    try {
-      await updateWorldbookWith(book, function (entries) {
-        return entries.map(function (en) {
-          if (en.uid !== uid) return en;
-          return Object.assign({}, en, { enabled: newVal });
-        });
-      }, { render: "immediate" });
-      entry.enabled = newVal;
-      _other_updateRowVisual(row, entry);
+    // 乐观更新：先立即改本地状态 + UI + 分组按钮，让点击瞬间响应
+    entry.enabled = newVal;
+    _other_updateRowVisual(row, entry);
+    // 后台静默写入世界书（不 await，不阻塞界面；失败则回滚）
+    updateWorldbookWith(book, function (entries) {
+      var target = entries.find(function (en) { return en.uid === uid; });
+      if (target) target.enabled = newVal;
+      return entries;
+    }).then(function () {
       toastr.success((newVal ? "已开启" : "已关闭") + "：" + entry.name.replace(/^[^\u4e00-\u9fff]+/, ""));
-    } catch (err) {
+    }).catch(function (err) {
+      // 写入失败：回滚本地状态 + UI + 分组按钮
+      entry.enabled = !newVal;
+      _other_updateRowVisual(row, entry);
       toastr.error("切换失败: " + err.message);
-    }
+    });
   });
 
   // 检测/只看触发 合并按钮：
@@ -3808,6 +3824,40 @@ function _other_bindEvents() {
     await renderOtherEntriesView(true);
   });
 
+  // 全部开启：把所有条目恢复为开启（用于重置关闭状态）
+  $("#wb-other-allon").off("click").on("click", async function () {
+    var st = OTHER_ENTRIES_STATE;
+    // 只开启这个 tab 实际显示的条目（classified）中当前被关掉的，不误伤被排除的角色/剧情/梗概/系统等
+    var byBook = {};
+    var totalNeed = 0;
+    st.classified.forEach(function (x) {
+      var e = x.entry;
+      if (!e.enabled) {
+        if (!byBook[e.bookName]) byBook[e.bookName] = {};
+        byBook[e.bookName][e.uid] = true;
+        totalNeed++;
+      }
+    });
+    if (totalNeed === 0) { toastr.info("所有条目已全部开启"); return; }
+    var books = Object.keys(byBook);
+    var changed = 0;
+    for (var bi = 0; bi < books.length; bi++) {
+      var book = books[bi];
+      var uidSet = byBook[book];
+      try {
+        await updateWorldbookWith(book, function (entries) {
+          return entries.map(function (en) {
+            if (uidSet[en.uid]) return Object.assign({}, en, { enabled: true });
+            return en;
+          });
+        });
+      } catch (err) { toastr.error("批量开启失败: " + err.message); }
+    }
+    // 更新本地状态 + 行视图（只更新 classified 里的）
+    st.classified.forEach(function (x) { var e = x.entry; if (!e.enabled) { e.enabled = true; var row = $(".wb-other-item[data-uid='" + e.uid + "']"); if (row.length) _other_updateRowVisual(row, e); } });
+    toastr.success("已开启 " + totalNeed + " 个条目");
+  });
+
 }
 
 // 批量开关某个二级分组下的所有条目
@@ -3829,14 +3879,14 @@ async function _other_batchToggle(btn, targetVal, uids) {
         if (uidSet[en.uid]) return Object.assign({}, en, { enabled: targetVal });
         return en;
       });
-    }, { render: "immediate" });
+    });
     for (var j = 0; j < needChange.length; j++) {
       needChange[j].enabled = targetVal;
       var row = $(".wb-other-item[data-uid='" + needChange[j].uid + "']");
       if (row.length) _other_updateRowVisual(row, needChange[j]);
     }
     var newAllOn = items.every(function (x) { return x.enabled; });
-    $(btn).text(newAllOn ? "全关" : "全开").css("background", newAllOn ? "#744256" : "#2f8f5b");
+
     toastr.success((targetVal ? "已开启 " : "已关闭 ") + needChange.length + " 个条目");
   } catch (err) {
     toastr.error("批量操作失败: " + err.message);
@@ -3973,9 +4023,9 @@ async function _other_fastEstimate(inputText) {
   try { if (typeof getPreset === "function") { var p = getPreset("in_use"); if (p && p.prompts) text += p.prompts.filter(function (x) { return x.enabled && ["main", "nsfw", "jailbreak", "enhanceDefinitions"].indexOf(x.id) >= 0; }).map(function (x) { return x.content || ""; }).join("\n") + "\n"; } } catch (e) {}
   try { if (typeof getCurrentCharacterName === "function" && typeof getCharacter === "function") { var cn = getCurrentCharacterName(); if (cn) { var ch = await getCharacter(cn); if (ch) text += (ch.description || "") + "\n" + (ch.personality || "") + "\n" + (ch.scenario || "") + "\n"; } } } catch (e) {}
   try { if (typeof getChatMessages === "function") { text += getChatMessages(-8).map(function (m) { return m.name + ": " + m.message; }).join("\n") + "\n"; } } catch (e) {}
-  var trigCount = 0;
-  OTHER_ENTRIES_STATE.allEntries.forEach(function (x) { if (OTHER_ENTRIES_STATE.triggeredUids.has(x.uid)) trigCount++; });
-  text += "[触发条目 " + trigCount + " 个]\n";
+  // 拼接所有触发条目的完整 content（与明日方舟 fastEstimate 对齐）
+  var trigEntries = OTHER_ENTRIES_STATE.allEntries.filter(function (x) { return OTHER_ENTRIES_STATE.triggeredUids.has(x.uid); });
+  text += trigEntries.map(function (x) { return x.content || ""; }).join("\n") + "\n";
   if (inputText) text += ((typeof SillyTavern !== "undefined") ? SillyTavern.name1 : "User") + ": " + inputText + "\n";
   if (typeof SillyTavern !== "undefined" && typeof SillyTavern.getTokenCountAsync === "function") return await SillyTavern.getTokenCountAsync(text);
   return "估算跳过";
