@@ -1,0 +1,48 @@
+---
+<% const valueText = (key, indent = 0) => {
+  const value = getMessageVar(key);
+  if (value == null) return value === null ? 'null' : '';
+  let text;
+  if (typeof value === 'object') {
+    try {
+      text = (typeof applyVarYamlAnnotate === 'function')
+        ? applyVarYamlAnnotate(key).trimEnd()
+        : JSON.stringify(value, null, 2).trimEnd();
+    } catch (e) {
+      text = JSON.stringify(value, null, 2).trimEnd();
+    }
+  } else {
+    text = String(value);
+  }
+  return indent > 0 ? text.replace(/\n/g, '\n' + ' '.repeat(indent)) : text;
+}; %>
+<status_current_variable>
+当前时间: <%= valueText('stat_data.当前时间') %>
+所在地点: <%= valueText('stat_data.所在地点') %>
+
+_剧情显示: <%= valueText('stat_data.剧情显示') %>
+_是否为后日谈: <%= valueText('stat_data.是否为后日谈') %>
+
+已完成的上一个事件: <%= valueText('stat_data.已完成的上一个事件') %>
+当前演绎事件: <%= valueText('stat_data.当前演绎事件') %>
+
+已完成的上一个事件节点: <%= valueText('stat_data.已完成的上一个事件节点') %>
+当前演绎事件节点: <%= valueText('stat_data.当前演绎事件节点') %>
+即将进行的下一个事件节点: <%= valueText('stat_data.即将进行的下一个事件节点') %>
+
+当前长期目标: <%= valueText('stat_data.当前长期目标') %>
+章节终止条件: <%= valueText('stat_data.章节终止条件') %>
+
+指令:
+  推进剧情: <%= valueText('stat_data.指令.推进剧情') %>
+
+主角信息:
+  <%= valueText('stat_data._精简模式主角信息显示', 2) %>
+NPC漂泊者:
+  <%= valueText('stat_data.NPC漂泊者', 2) %>
+
+女性角色:
+  <%= valueText('stat_data._精简模式女性角色显示', 2) %>
+_已知角色名单:
+  <%= valueText('stat_data._已知角色名单', 2) %>
+</status_current_variable>
