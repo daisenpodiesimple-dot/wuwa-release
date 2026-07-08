@@ -26,6 +26,7 @@ WuwaWorks/
 ├── Avatars/                   # 角色头像（53 张）
 ├── StandingIllus/             # 角色立绘（41 张）
 ├── OpeningLogos/              # 开场 Logo（3 张）
+├── Character/                # 角色卡源 PNG（本地备份 + bundle 打包输出，不入 git 但上传 GitHub）
 └── README.md
 ```
 
@@ -45,6 +46,18 @@ WuwaWorks/
 |------|---------|
 | MVU 状态栏 | tavern_sync/Character/.../正则/[状态栏]MVU浪潮状态栏_0705.txt |
 | 开场白 | tavern_sync/Character/.../正则/[开场白]鸣潮开场_0629.txt |
+
+## 角色卡打包与发布
+
+角色卡内容编辑在 pull 副本（`tavern_sync/Character/`）里完成后，用 tavern_sync 的 bundle 命令打包成完整 PNG：
+
+```powershell
+cd C:\SillyTavern\WuwaWorks
+node tavern_sync/tavern_sync.mjs bundle WuWa_MVU
+```
+
+打包输出到 `tavern_sync/Character/WuWa Solaris-3 MVU Edition/WuWa Solaris-3 MVU Edition.png`，
+然后通过 GitHub REST API 上传到 `Character/` 目录（详见 AI_PUSH_GUIDE.md）。
 
 ## 作者
 
